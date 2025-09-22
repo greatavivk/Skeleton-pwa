@@ -3,7 +3,9 @@ const SCOPES = [
   'streaming',
   'user-read-playback-state',
   'user-modify-playback-state',
-  'user-read-currently-playing'
+  'user-read-currently-playing',
+  'user-read-email',
+  'user-read-private'
 ].join(' ');
 
 // Spotify Client ID configured for this skeleton (replace if you use a different Spotify app)

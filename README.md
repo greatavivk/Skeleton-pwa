@@ -3,11 +3,17 @@
 Minimal static PWA shell prepared for Spotify Web Playback SDK + PKCE (no backend).
 All files live in the repo root for easy static deploy (e.g., Vercel).
 
+## Features
+- Polished glassmorphism UI with profile badge, now-playing card, and responsive layout.
+- Shows the signed-in Spotify user (avatar, name, plan) as soon as authentication succeeds.
+- Integrated search form to look up tracks and trigger playback on the embedded Web Playback SDK device.
+- Playback controls (play sample, pause) plus live now-playing metadata pulled from player state.
+
 ## What’s included
-- `index.html` – UI + loads Web Playback SDK
-- `auth.js` – PKCE auth (no secret); uses `location.origin` as redirect URI
-- `player.js` – basic Web Playback SDK wiring
-- `manifest.webmanifest` – optional PWA metadata
+- `index.html` – Complete UI, styles, Spotify SDK bootstrapper, auth-aware search + playback logic.
+- `auth.js` – PKCE auth (no secret); uses `location.origin` as redirect URI and caches tokens in `localStorage`.
+- `player.js` – Web Playback SDK helpers (init, transfer playback, play/pause/resume via Web API).
+- `manifest.webmanifest` – Optional PWA metadata.
 
 ## Deploy to Vercel
 1. Import this GitHub repo into Vercel as a new project.
@@ -21,7 +27,7 @@ All files live in the repo root for easy static deploy (e.g., Vercel).
 2. Add **Redirect URI**: your exact Vercel URL with a trailing slash (e.g., `https://<project>.vercel.app/`).
 3. (Optional) Replace the default Client ID in `auth.js` if you use a different Spotify app (this repo ships with `1bc3566e5b8f4ae1bbaafec8950f4c86`).
 4. Redeploy (Vercel auto-deploys on push).
-5. Open your app → **Log in with Spotify** → **Play sample** (must be a user gesture). Requires Spotify Premium.
+5. Open your app → **Log in with Spotify**. Once authenticated the header shows who’s signed in, search for a song, then press play (requires Spotify Premium).
 
 ## Notes
 - Do not store a Client Secret in this repo. PKCE is secretless on the client.

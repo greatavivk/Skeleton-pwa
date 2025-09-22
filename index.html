@@ -5,15 +5,371 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Skeleton PWA</title>
     <link rel="manifest" href="manifest.webmanifest" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --bg: linear-gradient(145deg, #10131a, #1f1b2f 35%, #162e34 70%, #123438);
+        --card-bg: rgba(255, 255, 255, 0.08);
+        --card-border: rgba(255, 255, 255, 0.15);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.6);
+        --accent: #1db954;
+        --accent-dark: #199546;
+        --shadow: 0 18px 45px rgba(13, 15, 26, 0.45);
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: stretch;
+        justify-content: center;
+        padding: 32px 16px 64px;
+      }
+
+      main.app {
+        width: min(980px, 100%);
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      header.top {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      header.top h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 5vw, 3rem);
+        letter-spacing: -0.02em;
+      }
+
+      header.top p {
+        margin: 4px 0 0;
+        color: var(--muted);
+      }
+
+      .auth-block {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .profile {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      }
+
+      .profile.hidden { display: none; }
+
+      .profile img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid rgba(255, 255, 255, 0.25);
+      }
+
+      .profile-img.hidden { display: none; }
+
+      .profile-name {
+        font-weight: 600;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      button {
+        font: inherit;
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.15);
+        color: inherit;
+        transition: transform 150ms ease, background 150ms ease, box-shadow 150ms ease;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: #041407;
+        font-weight: 600;
+        box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06), 0 10px 20px rgba(30, 185, 84, 0.35);
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        background: rgba(255, 255, 255, 0.25);
+      }
+
+      button.primary:hover:not(:disabled) {
+        background: var(--accent-dark);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+        transform: none;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      }
+
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        padding: 24px;
+        box-shadow: var(--shadow);
+        backdrop-filter: blur(22px);
+      }
+
+      .status-card p {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .player-card {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+      }
+
+      .player-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+      }
+
+      .now-playing {
+        display: grid;
+        grid-template-columns: 88px 1fr;
+        gap: 18px;
+        align-items: center;
+      }
+
+      .now-playing img {
+        width: 88px;
+        height: 88px;
+        border-radius: 14px;
+        object-fit: cover;
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.35);
+      }
+
+      .now-playing img.hidden { display: none; }
+
+      .now-track {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin: 0;
+      }
+
+      .now-artist {
+        margin: 6px 0 0;
+      }
+
+      .player-controls {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .search-card {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .search-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 12px;
+      }
+
+      .search-form input {
+        border-radius: 999px;
+        border: none;
+        padding: 12px 18px;
+        font: inherit;
+        background: rgba(255, 255, 255, 0.12);
+        color: inherit;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+      }
+
+      .search-form input:disabled {
+        opacity: 0.5;
+      }
+
+      .results {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding: 0;
+        margin: 0;
+        max-height: 360px;
+        overflow: auto;
+      }
+
+      .results::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .results::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 999px;
+      }
+
+      .result {
+        display: grid;
+        grid-template-columns: auto 56px 1fr;
+        gap: 14px;
+        align-items: center;
+        padding: 12px 16px;
+        border-radius: 18px;
+        background: rgba(6, 7, 14, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        transition: background 150ms ease, transform 150ms ease;
+      }
+
+      .result.playing {
+        background: rgba(29, 185, 84, 0.18);
+        border-color: rgba(29, 185, 84, 0.55);
+      }
+
+      .result:hover {
+        transform: translateY(-1px);
+      }
+
+      .result button.play {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(29, 185, 84, 0.25);
+        border: none;
+        display: grid;
+        place-items: center;
+        color: var(--text);
+        font-size: 1.2rem;
+      }
+
+      .result button.play:hover:not(:disabled) {
+        background: rgba(29, 185, 84, 0.4);
+      }
+
+      .result img {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        object-fit: cover;
+      }
+
+      .result-noart {
+        width: 56px;
+        height: 56px;
+        border-radius: 12px;
+        display: grid;
+        place-items: center;
+        background: rgba(255, 255, 255, 0.12);
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.4rem;
+      }
+
+      .result-title {
+        font-weight: 600;
+        margin-bottom: 4px;
+      }
+
+      .search-empty {
+        text-align: center;
+        padding: 24px;
+        border-radius: 16px;
+        background: rgba(0, 0, 0, 0.25);
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+      }
+
+      @media (max-width: 720px) {
+        body { padding: 24px 12px 56px; }
+        .now-playing { grid-template-columns: 72px 1fr; }
+        .results { max-height: none; }
+        .result { grid-template-columns: auto 48px 1fr; }
+        .result img,
+        .result-noart { width: 48px; height: 48px; }
+      }
+    </style>
   </head>
   <body>
-    <main>
-      <h1>Skeleton PWA</h1>
-      <p id="status">Deployed? Next step is Spotify auth.</p>
-      <button id="login">Log in with Spotify</button>
-      <button id="play" disabled>Play sample</button>
-      <button id="pause" disabled>Pause</button>
-      <div id="now"></div>
+    <main class="app">
+      <header class="top">
+        <div>
+          <h1>Skeleton PWA</h1>
+          <p>Spotify-ready shell</p>
+        </div>
+        <div class="auth-block">
+          <div id="profile" class="profile hidden">
+            <img id="profile-img" class="profile-img hidden" alt="" />
+            <div>
+              <div id="profile-name" class="profile-name"></div>
+              <div id="profile-id" class="muted"></div>
+            </div>
+          </div>
+          <button id="login" class="primary">Log in with Spotify</button>
+        </div>
+      </header>
+
+      <section class="card status-card">
+        <p id="status">Deployed? Next step is Spotify auth.</p>
+      </section>
+
+      <section class="card player-card">
+        <div class="player-header">
+          <h2>Now Playing</h2>
+          <div class="player-controls">
+            <button id="play" disabled>Play sample</button>
+            <button id="pause" disabled>Pause</button>
+          </div>
+        </div>
+        <div class="now-playing">
+          <img id="now-art" class="hidden" alt="Album art" />
+          <div>
+            <p id="now-track" class="now-track">Nothing playing yet.</p>
+            <p id="now-artist" class="muted now-artist">Use the search below to start playback.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card search-card">
+        <div>
+          <h2>Search tracks</h2>
+          <p class="muted">Look up songs, tap play, and control playback right in the browser.</p>
+        </div>
+        <form id="search-form" class="search-form">
+          <input id="search" type="search" placeholder="Search for songs…" autocomplete="off" />
+          <button type="submit">Search</button>
+        </form>
+        <ul id="results" class="results">
+          <li class="search-empty">Log in first to search the Spotify catalog.</li>
+        </ul>
+      </section>
     </main>
 
     <!-- Spotify Web Playback SDK -->
@@ -21,34 +377,287 @@
 
     <script type="module">
       import { ensureAuth, getAccessTokenSync } from './auth.js';
-      import { initPlayer, startPlayback, pause } from './player.js';
+      import { initPlayer, startPlayback, pause, resume, transferPlayback } from './player.js';
 
       const status = document.getElementById('status');
       const loginBtn = document.getElementById('login');
+      const profile = document.getElementById('profile');
+      const profileImg = document.getElementById('profile-img');
+      const profileName = document.getElementById('profile-name');
+      const profileId = document.getElementById('profile-id');
       const playBtn = document.getElementById('play');
       const pauseBtn = document.getElementById('pause');
+      const nowTrack = document.getElementById('now-track');
+      const nowArtist = document.getElementById('now-artist');
+      const nowArt = document.getElementById('now-art');
+      const searchForm = document.getElementById('search-form');
+      const searchInput = document.getElementById('search');
+      const searchButton = searchForm.querySelector('button');
+      const results = document.getElementById('results');
 
-      loginBtn.onclick = async () => { await ensureAuth(); };
+      const state = {
+        sdkReady: false,
+        player: null,
+        deviceId: null,
+        activeUri: null
+      };
 
-      window.onSpotifyWebPlaybackSDKReady = async () => {
-        const token = getAccessTokenSync();
-        if (!token) {
-          status.textContent = 'Click “Log in with Spotify” first.';
+      const SAMPLE_URI = 'spotify:track:3n3Ppam7vgaVa1iaRUc9Lp';
+
+      function setSearchEnabled(enabled) {
+        searchInput.disabled = !enabled;
+        searchButton.disabled = !enabled;
+        if (!enabled) {
+          results.innerHTML = '<li class="search-empty">Log in first to search the Spotify catalog.</li>';
+        } else if (
+          !results.children.length ||
+          results.firstElementChild?.classList.contains('search-empty')
+        ) {
+          results.innerHTML = '<li class="search-empty">Search for your favorite songs.</li>';
+        }
+      }
+
+      function setProfileHidden(hidden) {
+        profile.classList.toggle('hidden', hidden);
+      }
+
+      function updateStatus(message) {
+        status.textContent = message;
+      }
+
+      function renderProfile(me) {
+        if (!me) {
+          setProfileHidden(true);
+          profileName.textContent = '';
+          profileId.textContent = '';
+          profileImg.src = '';
+          profileImg.classList.add('hidden');
           return;
         }
-        status.textContent = 'Initializing player…';
+        setProfileHidden(false);
+        const name = me.display_name || me.id;
+        profileName.textContent = name;
+        profileId.textContent = me.product ? `${me.product.toUpperCase()} • ${me.id}` : me.id;
+        if (me.images && me.images.length) {
+          profileImg.src = me.images[0].url;
+          profileImg.classList.remove('hidden');
+        } else {
+          profileImg.src = '';
+          profileImg.classList.add('hidden');
+        }
+      }
 
-        const { deviceId, player } = await initPlayer(() => getAccessTokenSync());
-        status.textContent = `Device ready: ${deviceId}`;
+      function renderNowPlaying(track, paused) {
+        if (!track) {
+          nowTrack.textContent = 'Nothing playing yet.';
+          nowArtist.textContent = 'Use the search below to start playback.';
+          nowArt.classList.add('hidden');
+          nowArt.removeAttribute('src');
+          state.activeUri = null;
+          highlightActiveResult(null);
+          return;
+        }
+        nowTrack.textContent = track.name;
+        nowArtist.textContent = `${track.artists.map(a => a.name).join(', ')}${paused ? ' • Paused' : ''}`;
+        const image = track.album.images?.find((img) => img.height <= 320) || track.album.images?.[0];
+        if (image) {
+          nowArt.src = image.url;
+          nowArt.classList.remove('hidden');
+        } else {
+          nowArt.removeAttribute('src');
+          nowArt.classList.add('hidden');
+        }
+        state.activeUri = track.uri;
+        highlightActiveResult(track.uri);
+      }
 
-        playBtn.disabled = false;
-        pauseBtn.disabled = false;
+      function highlightActiveResult(uri) {
+        Array.from(results.querySelectorAll('.result')).forEach((item) => {
+          item.classList.toggle('playing', uri && item.dataset.uri === uri);
+        });
+      }
 
-        // Must be triggered by a user gesture
-        playBtn.onclick = () =>
-          startPlayback(deviceId, { uris: ['spotify:track:3n3Ppam7vgaVa1iaRUc9Lp'] }); // example
-        pauseBtn.onclick = () => pause(player);
+      async function fetchProfile() {
+        const token = getAccessTokenSync();
+        if (!token) {
+          renderProfile(null);
+          return;
+        }
+        try {
+          const res = await fetch('https://api.spotify.com/v1/me', {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!res.ok) throw new Error('Profile fetch failed');
+          const me = await res.json();
+          renderProfile(me);
+          updateStatus(`Signed in as ${me.display_name || me.id}.`);
+        } catch (err) {
+          renderProfile(null);
+          updateStatus('Signed in, but unable to load profile details.');
+          console.warn(err);
+        }
+      }
+
+      async function ensurePlayer() {
+        const token = getAccessTokenSync();
+        if (!token) {
+          updateStatus('Log in to initialize the Spotify player.');
+          setSearchEnabled(false);
+          return;
+        }
+        if (!state.sdkReady) {
+          updateStatus('Signed in. Waiting for the Spotify Web Playback SDK…');
+          return;
+        }
+        if (state.player) return;
+
+        try {
+          updateStatus('Initializing Spotify player…');
+          const { deviceId, player } = await initPlayer(() => getAccessTokenSync(), {
+            onStateChange: (playerState) => {
+              const track = playerState?.track_window?.current_track;
+              const paused = playerState?.paused ?? true;
+              renderNowPlaying(track, paused);
+            },
+            onNotReady: ({ device_id }) => {
+              if (state.deviceId === device_id) {
+                updateStatus('Spotify marked this device as offline. Press play to reconnect.');
+              }
+            }
+          });
+          state.deviceId = deviceId;
+          state.player = player;
+          playBtn.disabled = false;
+          pauseBtn.disabled = false;
+          setSearchEnabled(true);
+          updateStatus(`Device ready • ${deviceId}`);
+          try {
+            await transferPlayback(deviceId);
+          } catch (err) {
+            console.warn('Transfer playback failed', err);
+          }
+        } catch (err) {
+          console.error(err);
+          updateStatus('Failed to initialize the Spotify player. See console for details.');
+        }
+      }
+
+      async function handleSearch(event) {
+        event.preventDefault();
+        const query = searchInput.value.trim();
+        if (!query) return;
+        const token = getAccessTokenSync();
+        if (!token) {
+          updateStatus('Log in with Spotify to search the catalog.');
+          return;
+        }
+        results.innerHTML = '<li class="search-empty">Searching…</li>';
+        try {
+          const url = new URL('https://api.spotify.com/v1/search');
+          url.search = new URLSearchParams({ q: query, type: 'track', limit: '10' }).toString();
+          const res = await fetch(url.toString(), {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (!res.ok) throw new Error('Search failed');
+          const data = await res.json();
+          const tracks = data.tracks?.items ?? [];
+          if (!tracks.length) {
+            results.innerHTML = '<li class="search-empty">No tracks matched. Try another search.</li>';
+            return;
+          }
+          const frag = document.createDocumentFragment();
+          tracks.forEach((track) => {
+            const li = document.createElement('li');
+            li.className = 'result';
+            li.dataset.uri = track.uri;
+            const image = track.album.images?.[2] || track.album.images?.[1] || track.album.images?.[0];
+            const artwork = image
+              ? `<img src="${image.url}" alt="" />`
+              : '<div class="result-noart" aria-hidden="true">♪</div>';
+            li.innerHTML = `
+              <button class="play" type="button" data-uri="${track.uri}" aria-label="Play ${track.name}">▶</button>
+              ${artwork}
+              <div>
+                <div class="result-title">${track.name}</div>
+                <div class="muted">${track.artists.map((a) => a.name).join(', ')} • ${track.album.name}</div>
+              </div>
+            `;
+            frag.appendChild(li);
+          });
+          results.innerHTML = '';
+          results.appendChild(frag);
+          highlightActiveResult(state.activeUri);
+        } catch (err) {
+          console.error(err);
+          results.innerHTML = '<li class="search-empty">Something went wrong. Check the console for details.</li>';
+        }
+      }
+
+      async function playUri(uri) {
+        if (!state.deviceId) {
+          updateStatus('Player is not ready yet.');
+          await ensurePlayer();
+          if (!state.deviceId) return;
+        }
+        try {
+          updateStatus('Starting playback…');
+          await startPlayback(state.deviceId, { uris: [uri] });
+          if (state.player) {
+            await resume(state.player);
+          }
+        } catch (err) {
+          console.error(err);
+          updateStatus('Unable to start playback. Check the console for details.');
+        }
+      }
+
+      loginBtn.addEventListener('click', async () => {
+        updateStatus('Checking Spotify authentication…');
+        const token = await ensureAuth();
+        if (token) {
+          setSearchEnabled(true);
+          await fetchProfile();
+          await ensurePlayer();
+        }
+      });
+
+      playBtn.addEventListener('click', () => {
+        if (!state.deviceId) {
+          ensurePlayer();
+          return;
+        }
+        playUri(SAMPLE_URI);
+      });
+
+      pauseBtn.addEventListener('click', () => {
+        if (state.player) {
+          pause(state.player);
+        }
+      });
+
+      searchForm.addEventListener('submit', handleSearch);
+
+      results.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-uri]');
+        if (!button) return;
+        const uri = button.dataset.uri;
+        playUri(uri);
+      });
+
+      window.onSpotifyWebPlaybackSDKReady = async () => {
+        state.sdkReady = true;
+        await ensurePlayer();
       };
+
+      const existingToken = getAccessTokenSync();
+      if (existingToken) {
+        setSearchEnabled(true);
+        fetchProfile();
+        ensurePlayer();
+      } else {
+        setSearchEnabled(false);
+        setProfileHidden(true);
+      }
     </script>
   </body>
 </html>
