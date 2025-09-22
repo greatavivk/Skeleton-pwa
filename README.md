@@ -7,7 +7,7 @@ All files live in the repo root for easy static deploy (e.g., Vercel).
 - Polished glassmorphism UI with profile badge, now-playing card, and responsive layout.
 - Shows the signed-in Spotify user (avatar, name, plan) as soon as authentication succeeds.
 - Integrated search form to look up tracks and trigger playback on the embedded Web Playback SDK device.
-- Playback controls (play sample, pause) plus live now-playing metadata pulled from player state.
+- Playback controls (play, pause) plus live now-playing metadata pulled from player state.
 
 ## What’s included
 - `index.html` – Complete UI, styles, Spotify SDK bootstrapper, auth-aware search + playback logic.
