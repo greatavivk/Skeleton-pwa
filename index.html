@@ -576,7 +576,33 @@
       const ytResults = document.getElementById('yt-results');
       const youtubePlaceholder = document.getElementById('youtube-placeholder');
 
-      const YT_API_KEY = 'AIzaSyB2IQNm_zzPgXZ4L1b00g2p_bJM2FplSzc';
+      let ytApiKeyCache = null;
+      let ytApiKeyPromise = null;
+
+      async function getYouTubeApiKey() {
+        if (ytApiKeyCache) return ytApiKeyCache;
+        if (!ytApiKeyPromise) {
+          ytApiKeyPromise = fetch('/api/youtube-key', { cache: 'no-store' })
+            .then((res) => {
+              if (!res.ok) {
+                throw new Error(`YouTube API key unavailable (${res.status})`);
+              }
+              return res.json();
+            })
+            .then((json) => {
+              if (!json || typeof json.key !== 'string' || !json.key) {
+                throw new Error('YouTube API key missing from response');
+              }
+              ytApiKeyCache = json.key;
+              return ytApiKeyCache;
+            })
+            .catch((err) => {
+              ytApiKeyPromise = null;
+              throw err;
+            });
+        }
+        return ytApiKeyPromise;
+      }
 
       const state = {
         sdkReady: false,
@@ -734,13 +760,14 @@
         if (!query) return;
         ytResults.innerHTML = '<li class="search-empty">Searching YouTube…</li>';
         try {
+          const apiKey = await getYouTubeApiKey();
           const url = new URL('https://www.googleapis.com/youtube/v3/search');
           url.search = new URLSearchParams({
             part: 'snippet',
             type: 'video',
             maxResults: '10',
             q: query,
-            key: YT_API_KEY,
+            key: apiKey,
             videoEmbeddable: 'true'
           }).toString();
           const res = await fetch(url.toString());
@@ -816,7 +843,12 @@
           highlightYouTubeResult(youtubeState.currentVideoId);
         } catch (err) {
           console.error('YouTube search failed', err);
-          ytResults.innerHTML = '<li class="search-empty">Unable to load YouTube results right now.</li>';
+          if (err?.message?.includes('YouTube API key')) {
+            ytResults.innerHTML =
+              '<li class="search-empty">YouTube API key not configured. Add it as the YOUTUBE_API_KEY environment variable.</li>';
+          } else {
+            ytResults.innerHTML = '<li class="search-empty">Unable to load YouTube results right now.</li>';
+          }
         }
       }
 

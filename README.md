@@ -14,6 +14,7 @@ All files live in the repo root for easy static deploy (e.g., Vercel).
 - `index.html` – Complete UI, styles, Spotify SDK bootstrapper, auth-aware search + playback logic, plus YouTube search/player wiring.
 - `auth.js` – PKCE auth (no secret); uses `location.origin` as redirect URI and caches tokens in `localStorage`.
 - `player.js` – Web Playback SDK helpers (init, transfer playback, play/pause/resume via Web API).
+- `api/youtube-key.js` – Serverless endpoint that returns the configured YouTube API key at request time.
 - `manifest.webmanifest` – Optional PWA metadata.
 
 ## Deploy to Vercel
@@ -31,7 +32,8 @@ All files live in the repo root for easy static deploy (e.g., Vercel).
 5. Open your app → **Log in with Spotify**. Once authenticated the header shows who’s signed in, search for a song, then press play (requires Spotify Premium).
 
 ## YouTube search & playback
-- The YouTube player and search UI use the provided API key (`AIzaSyB2IQNm_zzPgXZ4L1b00g2p_bJM2FplSzc`). Replace it in `index.html` if you rotate keys or move to your own quota.
+- YouTube search requests expect the `YOUTUBE_API_KEY` environment variable to be set (e.g., in Vercel Project Settings → Environment Variables). The client fetches the key via `/api/youtube-key`, keeping secrets out of the repository.
+- After updating the value, trigger a redeploy so the serverless function picks up the latest key.
 - Search results are limited to embeddable videos and play inside the inline IFrame player when you tap the play action.
 
 ## Notes
