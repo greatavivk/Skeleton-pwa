@@ -6,8 +6,38 @@ const SCOPES = [
   'user-read-currently-playing'
 ].join(' ');
 
-// 👉 USER ACTION LATER: replace with the real Spotify Client ID after creating the Spotify app
-const CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID';
+// 👉 USER ACTION LATER: replace with the real Spotify Client ID after creating the Spotify app.
+// The value is loaded from config.js (ignored by git) when available.
+let CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID';
+let GOOGLE_API_KEY = '';
+let configPromise;
+
+async function loadConfig() {
+  if (!configPromise) {
+    configPromise = (async () => {
+      try {
+        const mod = await import('./config.js');
+        const candidates = [mod, mod.default, mod.config].filter(Boolean);
+        for (const candidate of candidates) {
+          if (typeof candidate.spotifyClientId === 'string' && candidate.spotifyClientId.trim()) {
+            CLIENT_ID = candidate.spotifyClientId.trim();
+          }
+          if (typeof candidate.googleApiKey === 'string' && candidate.googleApiKey.trim()) {
+            GOOGLE_API_KEY = candidate.googleApiKey.trim();
+          }
+        }
+      } catch (error) {
+        console.warn('Optional config.js not found; using placeholder values for secrets.', error);
+      }
+    })();
+  }
+  return configPromise;
+}
+
+export async function getGoogleApiKey() {
+  await loadConfig();
+  return GOOGLE_API_KEY;
+}
 
 // Redirect URI automatically matches the deployed origin, e.g. https://<project>.vercel.app/
 const REDIRECT_URI = `${location.origin}/`;
@@ -29,8 +59,9 @@ export function getAccessTokenSync() {
 }
 
 export async function ensureAuth() {
+  await loadConfig();
   if (!CLIENT_ID || CLIENT_ID.includes('YOUR_SPOTIFY_CLIENT_ID')) {
-    alert('Add your Spotify Client ID in auth.js first.');
+    alert('Add your Spotify Client ID in config.js first (see config.example.js).');
     return;
   }
 
@@ -68,6 +99,7 @@ export async function ensureAuth() {
 }
 
 async function handleRedirect(code) {
+  await loadConfig();
   const verifier = localStorage.getItem(K.verifier);
   if (!verifier) throw new Error('Missing PKCE verifier');
 
@@ -90,6 +122,7 @@ async function handleRedirect(code) {
 }
 
 async function refreshToken(refresh) {
+  await loadConfig();
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refresh,
