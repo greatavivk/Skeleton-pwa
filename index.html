@@ -30,6 +30,37 @@
         align-items: stretch;
         justify-content: center;
         padding: 32px 16px 64px;
+        position: relative;
+        overflow-x: hidden;
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        inset: -20% -10%;
+        background: radial-gradient(ellipse at top left, rgba(29, 185, 84, 0.32), transparent 60%),
+          radial-gradient(ellipse at bottom right, rgba(255, 255, 255, 0.12), transparent 65%);
+        filter: blur(0);
+        opacity: 0.65;
+        transform: rotate(0deg) scale(1);
+        animation: aurora 18s ease-in-out infinite alternate;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      @keyframes aurora {
+        from {
+          transform: rotate(0deg) scale(1);
+          opacity: 0.45;
+        }
+        50% {
+          transform: rotate(8deg) scale(1.1);
+          opacity: 0.7;
+        }
+        to {
+          transform: rotate(-6deg) scale(1.05);
+          opacity: 0.55;
+        }
       }
 
       main.app {
@@ -37,6 +68,8 @@
         display: flex;
         flex-direction: column;
         gap: 20px;
+        position: relative;
+        z-index: 1;
       }
 
       header.top {
@@ -53,7 +86,49 @@
         letter-spacing: -0.02em;
       }
 
-      header.top p {
+      header.top .subtitle {
+        margin: 6px 0 0;
+        color: rgba(255, 255, 255, 0.78);
+        font-weight: 500;
+        letter-spacing: 0.08em;
+        font-size: 0.9rem;
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        position: relative;
+        padding-left: 18px;
+      }
+
+      header.top .subtitle::before {
+        content: '';
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--accent);
+        box-shadow: 0 0 12px rgba(29, 185, 84, 0.8);
+      }
+
+      header.top .subtitle span {
+        background: linear-gradient(120deg, #fff, rgba(255, 255, 255, 0.65));
+        -webkit-background-clip: text;
+        color: transparent;
+        background-size: 200% 200%;
+        animation: shimmer 6s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      header.top p:not(.subtitle) {
         margin: 4px 0 0;
         color: var(--muted);
       }
@@ -388,6 +463,11 @@
           height: 60px;
         }
       }
+
+      @media (prefers-reduced-motion: reduce) {
+        body::before { animation: none; opacity: 0.35; }
+        header.top .subtitle span { animation: none; }
+      }
     </style>
   </head>
   <body>
@@ -395,6 +475,7 @@
       <header class="top">
         <div>
           <h1>Skeleton PWA</h1>
+          <p class="subtitle"><span>Hi Vivien</span></p>
           <p>Spotify-ready shell</p>
         </div>
         <div class="auth-block">
@@ -607,6 +688,11 @@
                   youtubeState.player.loadVideoById(youtubeState.pendingVideoId);
                   youtubeState.pendingVideoId = null;
                   youtubePlaceholder.classList.add('hidden');
+                  try {
+                    youtubeState.player.playVideo();
+                  } catch (err) {
+                    console.warn('Unable to autoplay YouTube video on ready', err);
+                  }
                 }
               },
               onStateChange: (event) => {
@@ -628,13 +714,17 @@
         if (!videoId) return;
         youtubeState.currentVideoId = videoId;
         highlightYouTubeResult(videoId);
-        if (youtubeState.ready && youtubeState.player) {
-          youtubeState.player.loadVideoById(videoId);
+        youtubeState.pendingVideoId = videoId;
+        const player = ensureYouTubePlayer();
+        if (youtubeState.ready && player) {
+          player.loadVideoById(videoId);
           youtubeState.pendingVideoId = null;
           youtubePlaceholder.classList.add('hidden');
-        } else {
-          youtubeState.pendingVideoId = videoId;
-          ensureYouTubePlayer();
+          try {
+            player.playVideo();
+          } catch (err) {
+            console.warn('Unable to autoplay YouTube video', err);
+          }
         }
       }
 
@@ -874,12 +964,14 @@
         }
       });
 
-      playBtn.addEventListener('click', () => {
+      playBtn.addEventListener('click', async () => {
         if (!state.deviceId) {
-          ensurePlayer();
-          return;
+          await ensurePlayer();
+          if (!state.deviceId) {
+            return;
+          }
         }
-        playUri(SAMPLE_URI);
+        await playUri(SAMPLE_URI);
       });
 
       pauseBtn.addEventListener('click', () => {
