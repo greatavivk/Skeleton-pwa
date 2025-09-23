@@ -199,6 +199,52 @@
         gap: 20px;
       }
 
+      .youtube-card {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .youtube-player-shell {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border-radius: 24px;
+        overflow: hidden;
+        background: rgba(6, 7, 14, 0.35);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+      }
+
+      #youtube-player {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .youtube-player-shell iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+      }
+
+      .youtube-placeholder {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-items: center;
+        text-align: center;
+        padding: 24px;
+        color: var(--muted);
+        background: rgba(12, 15, 24, 0.55);
+        pointer-events: none;
+      }
+
+      .youtube-placeholder.hidden {
+        display: none;
+      }
+
       .search-form {
         display: grid;
         grid-template-columns: 1fr auto;
@@ -283,6 +329,26 @@
         object-fit: cover;
       }
 
+      .youtube-results .result {
+        grid-template-columns: auto 120px 1fr;
+        align-items: center;
+      }
+
+      .youtube-results .result img {
+        width: 120px;
+        height: 68px;
+        border-radius: 14px;
+        object-fit: cover;
+      }
+
+      .youtube-results .result button.play {
+        background: rgba(255, 255, 255, 0.15);
+      }
+
+      .youtube-results .result button.play:hover:not(:disabled) {
+        background: rgba(255, 255, 255, 0.25);
+      }
+
       .result-noart {
         width: 56px;
         height: 56px;
@@ -314,6 +380,13 @@
         .result { grid-template-columns: auto 48px 1fr; }
         .result img,
         .result-noart { width: 48px; height: 48px; }
+        .youtube-results .result {
+          grid-template-columns: auto 96px 1fr;
+        }
+        .youtube-results .result img {
+          width: 96px;
+          height: 60px;
+        }
       }
     </style>
   </head>
@@ -370,10 +443,33 @@
           <li class="search-empty">Log in first to search the Spotify catalog.</li>
         </ul>
       </section>
+
+      <section class="card youtube-card">
+        <div>
+          <h2>YouTube player</h2>
+          <p class="muted">Search YouTube and play videos inline with the embedded player.</p>
+        </div>
+        <div class="youtube-player-shell">
+          <div id="youtube-player"></div>
+          <div id="youtube-placeholder" class="youtube-placeholder">
+            Search for a video below to load it here.
+          </div>
+        </div>
+        <form id="yt-search-form" class="search-form">
+          <input id="yt-search" type="search" placeholder="Search YouTube videos…" autocomplete="off" />
+          <button type="submit">Search YouTube</button>
+        </form>
+        <ul id="yt-results" class="results youtube-results">
+          <li class="search-empty">Try searching for any music video or clip.</li>
+        </ul>
+      </section>
     </main>
 
     <!-- Spotify Web Playback SDK -->
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
+
+    <!-- YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
 
     <script type="module">
       import { ensureAuth, getAccessTokenSync } from './auth.js';
@@ -394,6 +490,12 @@
       const searchInput = document.getElementById('search');
       const searchButton = searchForm.querySelector('button');
       const results = document.getElementById('results');
+      const ytSearchForm = document.getElementById('yt-search-form');
+      const ytSearchInput = document.getElementById('yt-search');
+      const ytResults = document.getElementById('yt-results');
+      const youtubePlaceholder = document.getElementById('youtube-placeholder');
+
+      const YT_API_KEY = 'AIzaSyB2IQNm_zzPgXZ4L1b00g2p_bJM2FplSzc';
 
       const state = {
         sdkReady: false,
@@ -403,6 +505,13 @@
       };
 
       const SAMPLE_URI = 'spotify:track:3n3Ppam7vgaVa1iaRUc9Lp';
+
+      const youtubeState = {
+        player: null,
+        ready: false,
+        pendingVideoId: null,
+        currentVideoId: null
+      };
 
       function setSearchEnabled(enabled) {
         searchInput.disabled = !enabled;
@@ -475,6 +584,150 @@
         Array.from(results.querySelectorAll('.result')).forEach((item) => {
           item.classList.toggle('playing', uri && item.dataset.uri === uri);
         });
+      }
+
+      function highlightYouTubeResult(videoId) {
+        Array.from(ytResults.querySelectorAll('.result')).forEach((item) => {
+          item.classList.toggle('playing', Boolean(videoId) && item.dataset.videoId === videoId);
+        });
+      }
+
+      function ensureYouTubePlayer() {
+        if (youtubeState.player) {
+          return youtubeState.player;
+        }
+        if (window.YT && typeof window.YT.Player === 'function') {
+          youtubeState.ready = false;
+          const config = {
+            playerVars: { rel: 0, modestbranding: 1, playsinline: 1 },
+            events: {
+              onReady: () => {
+                youtubeState.ready = true;
+                if (youtubeState.pendingVideoId) {
+                  youtubeState.player.loadVideoById(youtubeState.pendingVideoId);
+                  youtubeState.pendingVideoId = null;
+                  youtubePlaceholder.classList.add('hidden');
+                }
+              },
+              onStateChange: (event) => {
+                if (window.YT && event.data === window.YT.PlayerState.PLAYING) {
+                  youtubePlaceholder.classList.add('hidden');
+                }
+              }
+            }
+          };
+          if (youtubeState.pendingVideoId) {
+            config.videoId = youtubeState.pendingVideoId;
+          }
+          youtubeState.player = new window.YT.Player('youtube-player', config);
+        }
+        return youtubeState.player;
+      }
+
+      function playYouTubeVideo(videoId) {
+        if (!videoId) return;
+        youtubeState.currentVideoId = videoId;
+        highlightYouTubeResult(videoId);
+        if (youtubeState.ready && youtubeState.player) {
+          youtubeState.player.loadVideoById(videoId);
+          youtubeState.pendingVideoId = null;
+          youtubePlaceholder.classList.add('hidden');
+        } else {
+          youtubeState.pendingVideoId = videoId;
+          ensureYouTubePlayer();
+        }
+      }
+
+      async function handleYouTubeSearch(event) {
+        event.preventDefault();
+        const query = ytSearchInput.value.trim();
+        if (!query) return;
+        ytResults.innerHTML = '<li class="search-empty">Searching YouTube…</li>';
+        try {
+          const url = new URL('https://www.googleapis.com/youtube/v3/search');
+          url.search = new URLSearchParams({
+            part: 'snippet',
+            type: 'video',
+            maxResults: '10',
+            q: query,
+            key: YT_API_KEY,
+            videoEmbeddable: 'true'
+          }).toString();
+          const res = await fetch(url.toString());
+          if (!res.ok) throw new Error(`YouTube search failed: ${res.status}`);
+          const data = await res.json();
+          const items = data.items ?? [];
+          const frag = document.createDocumentFragment();
+          let appended = 0;
+          items.forEach((item) => {
+            const videoId = item.id?.videoId;
+            if (!videoId) return;
+            const li = document.createElement('li');
+            li.className = 'result';
+            li.dataset.videoId = videoId;
+
+            const playButton = document.createElement('button');
+            playButton.className = 'play';
+            playButton.type = 'button';
+            playButton.dataset.videoId = videoId;
+            const titleText = item.snippet?.title || 'YouTube video';
+            playButton.setAttribute('aria-label', `Play ${titleText}`);
+            playButton.textContent = '▶';
+
+            const thumb =
+              item.snippet?.thumbnails?.medium ||
+              item.snippet?.thumbnails?.high ||
+              item.snippet?.thumbnails?.default;
+            let art;
+            if (thumb?.url) {
+              art = document.createElement('img');
+              art.src = thumb.url;
+              art.alt = '';
+            } else {
+              art = document.createElement('div');
+              art.className = 'result-noart';
+              art.setAttribute('aria-hidden', 'true');
+              art.textContent = '▶';
+            }
+
+            const info = document.createElement('div');
+            const title = document.createElement('div');
+            title.className = 'result-title';
+            title.textContent = titleText;
+            const meta = document.createElement('div');
+            meta.className = 'muted';
+            const channel = item.snippet?.channelTitle || 'Unknown channel';
+            let published = 'Unknown date';
+            if (item.snippet?.publishedAt) {
+              const d = new Date(item.snippet.publishedAt);
+              if (!Number.isNaN(d.valueOf())) {
+                published = d.toLocaleDateString();
+              }
+            }
+            meta.textContent = `${channel} • ${published}`;
+
+            info.appendChild(title);
+            info.appendChild(meta);
+
+            li.appendChild(playButton);
+            li.appendChild(art);
+            li.appendChild(info);
+            frag.appendChild(li);
+            appended += 1;
+          });
+
+          if (!appended) {
+            ytResults.innerHTML = '<li class="search-empty">No embeddable videos matched your search.</li>';
+            return;
+          }
+
+          ytResults.innerHTML = '';
+          ytResults.appendChild(frag);
+          highlightYouTubeResult(youtubeState.currentVideoId);
+        } catch (err) {
+          console.error('YouTube search failed', err);
+          ytResults.innerHTML = '<li class="search-empty">Unable to load YouTube results right now.</li>';
+        }
       }
 
       async function fetchProfile() {
@@ -643,6 +896,18 @@
         const uri = button.dataset.uri;
         playUri(uri);
       });
+
+      ytSearchForm.addEventListener('submit', handleYouTubeSearch);
+
+      ytResults.addEventListener('click', (event) => {
+        const button = event.target.closest('button[data-video-id]');
+        if (!button) return;
+        playYouTubeVideo(button.dataset.videoId);
+      });
+
+      window.onYouTubeIframeAPIReady = () => {
+        ensureYouTubePlayer();
+      };
 
       window.onSpotifyWebPlaybackSDKReady = async () => {
         state.sdkReady = true;
