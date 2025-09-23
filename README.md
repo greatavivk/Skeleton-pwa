@@ -19,9 +19,14 @@ All files live in the repo root for easy static deploy (e.g., Vercel).
 ## Wire Spotify (user will do this)
 1. Create a Spotify Developer app.
 2. Add **Redirect URI**: your exact Vercel URL with a trailing slash (e.g., `https://<project>.vercel.app/`).
-3. Copy the **Client ID** and paste it into `auth.js` (replace `YOUR_SPOTIFY_CLIENT_ID`).
+3. Copy the **Client ID** into a local `config.js` file (see below).
 4. Redeploy (Vercel auto-deploys on push).
 5. Open your app → **Log in with Spotify** → **Play sample** (must be a user gesture). Requires Spotify Premium.
+
+## Configure API keys securely
+1. Duplicate `config.example.js` as `config.js` and fill in real values for `spotifyClientId` and `googleApiKey`.
+2. Keep `config.js` out of Git. The repo includes a `.gitignore` entry so keys never reach GitHub.
+3. If you publish a Google API key for client-side use, restrict it in the Google Cloud Console to trusted domains (e.g., your Vercel deployment).
 
 ## Notes
 - Do not store a Client Secret in this repo. PKCE is secretless on the client.
