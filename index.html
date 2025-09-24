@@ -1,292 +1,2303 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Skeleton PWA</title>
+    <title>Days till I see Nelusik</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
       :root {
-        color-scheme: light dark;
-        font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+        color-scheme: dark light;
+        --bg: radial-gradient(circle at top, #1a093b 0%, #05070f 50%, #01030a 100%);
+        --surface: rgba(12, 16, 28, 0.82);
+        --surface-strong: rgba(18, 22, 36, 0.94);
+        --border: rgba(128, 140, 176, 0.25);
+        --text: #ecf1ff;
+        --subtle: rgba(200, 210, 245, 0.72);
+        --accent: #8f6fff;
+        --accent-soft: rgba(143, 111, 255, 0.18);
+        --spotify: #1db954;
+        --youtube: #ff3d3d;
+        --glow: 0 0 45px rgba(143, 111, 255, 0.35);
+        --card-backdrop: blur(22px);
+        font-family: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+        background-color: #02040c;
+      }
+
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
       }
 
       body {
         margin: 0;
-        padding: 2rem;
-        background: #f7f7f8;
-        color: #111;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        overflow-x: hidden;
       }
 
-      @media (prefers-color-scheme: dark) {
-        body {
-          background: #111217;
-          color: #f1f3f9;
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        background: radial-gradient(ellipse at 20% 20%, rgba(143, 111, 255, 0.35), transparent 55%),
+          radial-gradient(ellipse at 80% 10%, rgba(0, 197, 241, 0.25), transparent 50%),
+          radial-gradient(circle at 50% 80%, rgba(29, 185, 84, 0.18), transparent 60%);
+        opacity: 0.55;
+        pointer-events: none;
+        filter: blur(0);
+        z-index: 0;
+        animation: aurora 32s ease-in-out infinite alternate;
+      }
+
+      @keyframes aurora {
+        0% {
+          transform: scale(1) translate3d(0, 0, 0);
+        }
+        50% {
+          transform: scale(1.05) translate3d(1%, -1%, 0);
+        }
+        100% {
+          transform: scale(1.03) translate3d(-1%, 1%, 0);
         }
       }
 
       main {
-        display: grid;
-        gap: 1.75rem;
-        max-width: 960px;
-        margin: 0 auto;
+        position: relative;
+        z-index: 1;
+        width: min(1220px, calc(100vw - 3rem));
+        margin: -4rem auto 4rem;
       }
 
-      h1 {
+      header.hero {
+        position: relative;
+        z-index: 1;
+        padding: 6rem 1.5rem 10rem;
+        text-align: center;
+        overflow: hidden;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(32, 16, 71, 0.95), rgba(2, 11, 24, 0.8));
+        border-radius: 0 0 48px 48px;
+        box-shadow: 0 80px 120px rgba(5, 10, 24, 0.55);
+        z-index: -2;
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        inset: 10%;
+        background: radial-gradient(circle, rgba(143, 111, 255, 0.25), transparent 70%);
+        filter: blur(40px);
+        z-index: -1;
+        opacity: 0.85;
+      }
+
+      .hero h1 {
         margin: 0;
-        font-size: clamp(2.25rem, 4vw, 3rem);
+        font-weight: 700;
+        font-size: clamp(2.6rem, 5.5vw, 4.5rem);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        text-shadow: 0 0 22px rgba(143, 111, 255, 0.65);
+        animation: pulseGlow 8s ease-in-out infinite;
       }
 
-      .card {
-        background: rgba(255, 255, 255, 0.9);
-        border-radius: 18px;
-        padding: 1.75rem;
-        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        display: grid;
-        gap: 1rem;
-      }
-
-      @media (prefers-color-scheme: dark) {
-        .card {
-          background: rgba(30, 34, 45, 0.9);
-          border-color: rgba(148, 163, 184, 0.25);
+      @keyframes pulseGlow {
+        0%,
+        100% {
+          text-shadow: 0 0 28px rgba(143, 111, 255, 0.55);
+        }
+        50% {
+          text-shadow: 0 0 42px rgba(143, 111, 255, 0.85);
         }
       }
 
-      button,
-      input,
-      select {
-        font: inherit;
-        padding: 0.65rem 1.1rem;
+      .hero-subtitle {
+        margin: 1rem auto 2.75rem;
+        max-width: 520px;
+        font-size: 1.05rem;
+        color: var(--subtle);
+      }
+
+      .hero-countdown {
+        display: inline-flex;
+        gap: clamp(0.5rem, 2vw, 1.5rem);
+        justify-content: center;
+        align-items: center;
+      }
+
+      .hero-countdown .time-stack {
+        display: grid;
+        gap: 0.65rem;
+        justify-items: center;
+        padding: 1rem 1.25rem;
+        min-width: 110px;
+        background: rgba(12, 18, 37, 0.72);
+        border-radius: 18px;
+        border: 1px solid rgba(128, 140, 176, 0.35);
+        box-shadow: 0 25px 55px rgba(5, 12, 24, 0.4);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .hero-countdown .time-stack::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(160deg, rgba(143, 111, 255, 0.2), transparent 55%);
+        opacity: 0;
+        transition: opacity 0.6s ease;
+      }
+
+      .hero-countdown .time-stack.active::before {
+        opacity: 1;
+      }
+
+      .time-value {
+        font-size: clamp(2.2rem, 5vw, 3.4rem);
+        font-variant-numeric: tabular-nums;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+      }
+
+      .time-value.change {
+        animation: flip 0.75s ease;
+      }
+
+      @keyframes flip {
+        0% {
+          transform: rotateX(0deg);
+        }
+        45% {
+          transform: rotateX(70deg);
+        }
+        55% {
+          transform: rotateX(-15deg);
+        }
+        100% {
+          transform: rotateX(0deg);
+        }
+      }
+
+      .time-label {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.22em;
+        color: var(--subtle);
+      }
+
+      .hero-eta {
+        margin-top: 1.5rem;
+        color: rgba(220, 228, 255, 0.75);
+        font-size: 0.95rem;
+      }
+
+      nav.tabs {
+        width: min(1060px, calc(100vw - 3rem));
+        margin: -3.25rem auto 2rem;
+        padding: 0.35rem;
+        background: rgba(6, 10, 22, 0.9);
         border-radius: 999px;
-        border: 1px solid rgba(100, 116, 139, 0.35);
-        background: rgba(255, 255, 255, 0.9);
-        color: inherit;
+        border: 1px solid rgba(120, 130, 168, 0.25);
+        backdrop-filter: blur(18px);
+        display: flex;
+        gap: 0.35rem;
+        position: relative;
+        z-index: 2;
+      }
+
+      .tab-button {
+        flex: 1;
+        background: transparent;
+        color: var(--subtle);
+        border: none;
+        padding: 0.9rem 1rem;
+        border-radius: 999px;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        position: relative;
+        transition: color 0.25s ease;
+      }
+
+      .tab-button:hover,
+      .tab-button:focus-visible {
+        color: #fff;
+        outline: none;
+      }
+
+      .tab-button.is-active {
+        color: #fff;
+      }
+
+      .tab-button::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(143, 111, 255, 0.32), rgba(29, 185, 84, 0.18));
+        border-radius: inherit;
+        transform: scale(0.92);
+        opacity: 0;
+        transition: transform 0.35s ease, opacity 0.35s ease;
+        z-index: -1;
+      }
+
+      .tab-button.is-active::after {
+        transform: scale(1);
+        opacity: 1;
+        box-shadow: 0 14px 35px rgba(143, 111, 255, 0.25);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 2.9fr) minmax(0, 1fr);
+        gap: 2.5rem;
+        align-items: start;
+      }
+
+      .panels {
+        display: grid;
+        gap: 1.75rem;
+      }
+
+      .tab-panel {
+        background: var(--surface);
+        border-radius: 28px;
+        border: 1px solid var(--border);
+        backdrop-filter: var(--card-backdrop);
+        padding: clamp(1.6rem, 2vw, 2.35rem);
+        display: none;
+        box-shadow: 0 35px 80px rgba(4, 10, 28, 0.45);
+      }
+
+      .tab-panel.is-active {
+        display: grid;
+        gap: 1.6rem;
+      }
+
+      .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .panel-header h2 {
+        margin: 0;
+        font-size: 1.8rem;
+        letter-spacing: 0.02em;
+      }
+
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.05);
+        font-size: 0.85rem;
+        letter-spacing: 0.02em;
+        color: var(--subtle);
+        border: 1px solid rgba(143, 111, 255, 0.2);
+      }
+
+      .status-indicator {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(143, 111, 255, 0.45);
+        box-shadow: 0 0 12px rgba(143, 111, 255, 0.55);
+        transition: background 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .status-pill[data-state="connected"] {
+        color: #c8ffe0;
+        border-color: rgba(29, 185, 84, 0.45);
+        background: rgba(29, 185, 84, 0.08);
+      }
+
+      .status-pill[data-state="connected"] .status-indicator {
+        background: #1db954;
+        box-shadow: 0 0 14px rgba(29, 185, 84, 0.7);
+      }
+
+      .status-pill[data-state="celebrating"] {
+        color: #ffe6a4;
+        border-color: rgba(255, 198, 10, 0.4);
+        background: rgba(255, 198, 10, 0.12);
+      }
+
+      .status-pill[data-state="celebrating"] .status-indicator {
+        background: #ffc60a;
+        box-shadow: 0 0 14px rgba(255, 198, 10, 0.7);
+      }
+
+      .status-pill[data-state="error"] {
+        color: #ffb8b8;
+        border-color: rgba(255, 61, 61, 0.4);
+        background: rgba(255, 61, 61, 0.08);
+      }
+
+      .status-pill[data-state="error"] .status-indicator {
+        background: var(--youtube);
+        box-shadow: 0 0 14px rgba(255, 61, 61, 0.7);
+      }
+
+      .countdown-main {
+        display: grid;
+        gap: 1.8rem;
+      }
+
+      .countdown-display {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        justify-content: center;
+      }
+
+      .countdown-display .time-stack {
+        padding: 1rem 1.4rem;
+        min-width: 120px;
+        background: rgba(10, 15, 28, 0.82);
+        border-radius: 22px;
+        border: 1px solid rgba(120, 134, 170, 0.32);
+        box-shadow: 0 20px 45px rgba(3, 8, 20, 0.4);
+      }
+
+      .progress-shell {
+        width: 100%;
+        display: grid;
+        gap: 0.8rem;
+      }
+
+      .progress-track {
+        position: relative;
+        height: 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+
+      .progress-fill {
+        position: absolute;
+        inset: 0;
+        width: var(--progress, 0%);
+        background: linear-gradient(90deg, rgba(143, 111, 255, 0.75), rgba(29, 185, 84, 0.9));
+        transition: width 0.6s ease;
+      }
+
+      .progress-meta {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 1rem;
+        color: var(--subtle);
+      }
+
+      .countdown-details {
+        display: grid;
+        gap: 0.75rem;
+        background: rgba(9, 14, 28, 0.8);
+        border-radius: 18px;
+        padding: 1.25rem 1.5rem;
+        border: 1px solid rgba(120, 134, 170, 0.24);
+      }
+
+      .countdown-details dt {
+        font-weight: 600;
+        color: rgba(235, 240, 255, 0.85);
+      }
+
+      .countdown-details dd {
+        margin: 0;
+        color: var(--subtle);
+      }
+
+      .motivation {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 1.5rem;
+        align-items: center;
+        background: linear-gradient(135deg, rgba(143, 111, 255, 0.16), rgba(29, 185, 84, 0.08));
+        border-radius: 22px;
+        padding: 1.5rem;
+        border: 1px solid rgba(143, 111, 255, 0.18);
+      }
+
+      .motivation blockquote {
+        margin: 0;
+        font-size: 1.05rem;
+        color: rgba(236, 241, 255, 0.82);
+      }
+
+      .motivation blockquote footer {
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--subtle);
+      }
+
+      .motivation img {
+        width: 100%;
+        max-width: 260px;
+        border-radius: 18px;
+        box-shadow: 0 20px 45px rgba(3, 8, 20, 0.45);
+        justify-self: center;
+      }
+
+      .spotify-shell {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .spotify-card {
+        background: linear-gradient(160deg, rgba(12, 24, 18, 0.9), rgba(4, 12, 8, 0.8));
+        border-radius: 24px;
+        padding: 1.5rem;
+        border: 1px solid rgba(29, 185, 84, 0.25);
+        box-shadow: 0 28px 65px rgba(4, 12, 8, 0.5);
+      }
+
+      .now-playing {
+        display: grid;
+        grid-template-columns: 120px minmax(0, 1fr);
+        gap: 1.5rem;
+        align-items: center;
+      }
+
+      .now-playing img {
+        width: 120px;
+        height: 120px;
+        object-fit: cover;
+        border-radius: 18px;
+        box-shadow: 0 18px 40px rgba(1, 6, 2, 0.65);
+      }
+
+      .track-meta {
+        display: grid;
+        gap: 0.6rem;
+      }
+
+      .track-title {
+        margin: 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+      }
+
+      .track-artist {
+        margin: 0;
+        color: rgba(224, 244, 233, 0.7);
+      }
+
+      .playback-progress {
+        height: 6px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+      }
+
+      .playback-progress span {
+        display: block;
+        height: 100%;
+        width: var(--progress, 0%);
+        background: linear-gradient(90deg, rgba(29, 185, 84, 0.9), rgba(18, 125, 56, 0.85));
+        transition: width 0.4s ease;
+      }
+
+      .spotify-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.85rem;
+        align-items: center;
       }
 
       button {
-        cursor: pointer;
+        font: inherit;
+      }
+
+      .control-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.4rem;
+        padding: 0.65rem 1.1rem;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: inherit;
         font-weight: 600;
-        background: linear-gradient(135deg, #1db954, #1a8d44);
-        border: none;
-        color: white;
-        box-shadow: 0 14px 32px rgba(29, 185, 84, 0.35);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        cursor: pointer;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
       }
 
-      button:disabled {
+      .control-btn:disabled {
+        opacity: 0.45;
         cursor: not-allowed;
-        background: rgba(148, 163, 184, 0.3);
-        color: rgba(15, 23, 42, 0.6);
-        box-shadow: none;
       }
 
-      button:not(:disabled):hover {
+      .control-btn:not(:disabled):hover,
+      .control-btn:not(:disabled):focus-visible {
         transform: translateY(-1px);
-        box-shadow: 0 20px 40px rgba(29, 185, 84, 0.4);
+        box-shadow: 0 16px 30px rgba(1, 10, 5, 0.45);
+        background: rgba(255, 255, 255, 0.1);
+        outline: none;
       }
 
-      .actions {
+      .primary-action {
+        background: linear-gradient(135deg, rgba(29, 185, 84, 0.9), rgba(24, 156, 70, 0.95));
+        border: none;
+        color: #041307;
+        box-shadow: 0 20px 40px rgba(29, 185, 84, 0.35);
+      }
+
+      .spotify-volume {
         display: flex;
-        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.75rem;
+        margin-left: auto;
+      }
+
+      .spotify-volume input[type="range"] {
+        width: 150px;
+        accent-color: var(--spotify);
+      }
+
+      .spotify-search {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .spotify-search form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
         gap: 0.75rem;
       }
 
-      #yt-results {
+      input,
+      textarea,
+      select {
+        background: rgba(10, 14, 28, 0.9);
+        color: inherit;
+        border: 1px solid rgba(128, 140, 176, 0.35);
+        border-radius: 14px;
+        padding: 0.75rem 1rem;
+        font: inherit;
+      }
+
+      input:focus-visible,
+      textarea:focus-visible,
+      select:focus-visible {
+        outline: 2px solid rgba(143, 111, 255, 0.45);
+        outline-offset: 2px;
+      }
+
+      .result-grid {
         display: grid;
         gap: 1rem;
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .result-card {
+        display: grid;
+        grid-template-columns: 64px minmax(0, 1fr) auto;
+        gap: 1rem;
+        align-items: center;
+        padding: 0.75rem 1rem;
+        background: rgba(8, 18, 14, 0.75);
+        border-radius: 16px;
+        border: 1px solid rgba(29, 185, 84, 0.18);
+      }
+
+      .result-card img {
+        width: 64px;
+        height: 64px;
+        border-radius: 12px;
+        object-fit: cover;
+      }
+
+      .result-card h3 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .result-card p {
+        margin: 0.35rem 0 0;
+        font-size: 0.85rem;
+        color: rgba(200, 235, 212, 0.65);
+      }
+
+      .recent-tracks {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .recent-tracks ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .recent-tracks li {
+        background: rgba(7, 12, 8, 0.6);
+        border: 1px solid rgba(29, 185, 84, 0.18);
+        border-radius: 12px;
+        padding: 0.65rem 0.85rem;
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.9rem;
+      }
+
+      .youtube-shell {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .notice-card {
+        background: rgba(20, 14, 31, 0.8);
+        border-radius: 20px;
+        padding: 1.4rem 1.6rem;
+        border: 1px solid rgba(143, 111, 255, 0.24);
+      }
+
+      .notice-card strong {
+        color: #f7d7ff;
+      }
+
+      .key-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 0.75rem;
+        align-items: center;
+        margin-top: 1rem;
+      }
+
+      .key-input {
+        position: relative;
+      }
+
+      .key-input button {
+        position: absolute;
+        right: 0.6rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: transparent;
+        border: none;
+        color: var(--subtle);
+        cursor: pointer;
+        font-size: 0.85rem;
+      }
+
+      .youtube-status {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--subtle);
+      }
+
+      .yt-workspace {
+        display: grid;
+        gap: 1.5rem;
+      }
+
+      .yt-search-row {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .yt-search-row form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.75rem;
+      }
+
+      .yt-results {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
       }
 
       .yt-card {
-        display: flex;
-        flex-direction: column;
-        gap: 0.6rem;
-        background: rgba(241, 245, 249, 0.9);
-        border-radius: 16px;
+        background: rgba(12, 16, 30, 0.82);
+        border-radius: 18px;
         overflow: hidden;
-        border: 1px solid rgba(148, 163, 184, 0.3);
-      }
-
-      @media (prefers-color-scheme: dark) {
-        .yt-card {
-          background: rgba(30, 34, 45, 0.75);
-          border-color: rgba(148, 163, 184, 0.2);
-        }
+        border: 1px solid rgba(143, 111, 255, 0.18);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
       }
 
       .yt-card img {
         width: 100%;
         display: block;
+        aspect-ratio: 16 / 9;
+        object-fit: cover;
+      }
+
+      .yt-card .yt-card-body {
+        padding: 0.9rem 1.1rem;
+        display: grid;
+        gap: 0.45rem;
       }
 
       .yt-card h3 {
+        margin: 0;
         font-size: 1rem;
-        margin: 0 1rem;
       }
 
       .yt-card p {
-        margin: 0 1rem 1rem;
-        color: rgba(15, 23, 42, 0.75);
+        margin: 0;
         font-size: 0.85rem;
+        color: var(--subtle);
       }
 
-      @media (prefers-color-scheme: dark) {
-        .yt-card p {
-          color: rgba(226, 232, 240, 0.75);
-        }
-      }
-
-      .yt-card a {
-        color: inherit;
-        text-decoration: none;
-      }
-
-      .yt-card a:hover h3 {
-        text-decoration: underline;
-      }
-
-      form {
+      .yt-card footer {
+        padding: 0.75rem 1.1rem 1.1rem;
         display: flex;
-        flex-wrap: wrap;
-        gap: 0.75rem;
+        gap: 0.6rem;
+        justify-content: space-between;
         align-items: center;
       }
 
-      #yt-query {
-        flex: 1 1 220px;
+      .yt-card button {
+        border-radius: 12px;
+        border: 1px solid rgba(143, 111, 255, 0.3);
+        background: rgba(143, 111, 255, 0.12);
+        color: inherit;
+        cursor: pointer;
+        padding: 0.45rem 0.75rem;
+        font-size: 0.85rem;
+      }
+
+      .yt-player-area {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+      }
+
+      .player-frame {
+        background: rgba(8, 10, 18, 0.85);
+        border-radius: 18px;
+        border: 1px solid rgba(143, 111, 255, 0.18);
+        padding: 0.75rem;
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .player-frame iframe {
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        border: none;
+        border-radius: 14px;
+        background: #000;
+      }
+
+      .player-actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+      }
+
+      .playlist,
+      .history {
+        background: rgba(10, 14, 28, 0.82);
+        border-radius: 16px;
+        border: 1px solid rgba(143, 111, 255, 0.2);
+        padding: 1rem;
+        display: grid;
+        gap: 0.75rem;
+        max-height: 320px;
+        overflow-y: auto;
+      }
+
+      .playlist ul,
+      .history ul {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .playlist li,
+      .history li {
+        display: grid;
+        gap: 0.3rem;
+        background: rgba(12, 18, 34, 0.78);
+        border-radius: 12px;
+        padding: 0.6rem 0.75rem;
+        border: 1px solid rgba(143, 111, 255, 0.2);
+      }
+
+      .playlist li header,
+      .history li header {
+        font-weight: 600;
+      }
+
+      .playlist li .actions {
+        display: flex;
+        gap: 0.4rem;
+      }
+
+      .playlist li button {
+        flex: 1;
+        padding: 0.4rem;
+        border-radius: 8px;
+        border: 1px solid rgba(143, 111, 255, 0.25);
+        background: rgba(143, 111, 255, 0.1);
+        cursor: pointer;
+      }
+
+      .sidebar {
+        display: grid;
+        gap: 1.5rem;
+        position: sticky;
+        top: 6rem;
+      }
+
+      .sidebar-card {
+        background: var(--surface-strong);
+        border-radius: 22px;
+        border: 1px solid var(--border);
+        padding: 1.4rem;
+        display: grid;
+        gap: 0.9rem;
+        backdrop-filter: var(--card-backdrop);
+      }
+
+      .quick-stats dl {
+        display: grid;
+        gap: 0.6rem;
+        margin: 0;
+      }
+
+      .quick-stats dt {
+        font-weight: 600;
+        color: rgba(235, 240, 255, 0.78);
+      }
+
+      .quick-stats dd {
+        margin: 0;
+        color: var(--subtle);
+      }
+
+      .weather-card form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 0.6rem;
+      }
+
+      .weather-output {
+        background: rgba(10, 14, 28, 0.8);
+        border-radius: 16px;
+        padding: 1rem;
+        border: 1px solid rgba(143, 111, 255, 0.16);
+        display: grid;
+        gap: 0.5rem;
+      }
+
+      .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.35rem;
+        text-align: center;
+        font-size: 0.85rem;
+      }
+
+      .calendar-grid span {
+        padding: 0.35rem 0.25rem;
+        border-radius: 10px;
+        color: var(--subtle);
+      }
+
+      .calendar-grid .dow {
+        font-weight: 600;
+        color: rgba(236, 241, 255, 0.75);
+      }
+      .calendar-grid .highlight {
+        background: linear-gradient(135deg, rgba(143, 111, 255, 0.55), rgba(29, 185, 84, 0.45));
+        color: #0a101f;
+        font-weight: 700;
+      }
+
+      .memory-card img {
+        width: 100%;
+        border-radius: 18px;
+        object-fit: cover;
+        box-shadow: 0 20px 45px rgba(3, 8, 20, 0.45);
+      }
+
+      .footer {
+        margin: 3rem auto 2rem;
+        width: min(1220px, calc(100vw - 3rem));
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        justify-content: space-between;
+        font-size: 0.85rem;
+        color: rgba(206, 214, 240, 0.6);
+      }
+
+      .footer a {
+        color: rgba(206, 214, 240, 0.8);
+        text-decoration: none;
+      }
+
+      .footer a:hover,
+      .footer a:focus-visible {
+        text-decoration: underline;
+      }
+
+      .skeleton {
+        position: relative;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .skeleton::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        transform: translateX(-100%);
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.12), transparent);
+        animation: shimmer 1.5s infinite;
+      }
+
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .sr-only {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        border: 0;
+      }
+
+      @media (max-width: 1100px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: static;
+        }
+      }
+
+      @media (max-width: 840px) {
+        .hero {
+          padding-bottom: 8rem;
+        }
+
+        .yt-player-area {
+          grid-template-columns: 1fr;
+        }
+
+        .motivation {
+          grid-template-columns: 1fr;
+        }
+
+        .now-playing {
+          grid-template-columns: minmax(0, 1fr);
+          justify-items: center;
+          text-align: center;
+        }
+
+        .spotify-volume {
+          width: 100%;
+          justify-content: center;
+          margin-left: 0;
+        }
+      }
+
+      @media (max-width: 600px) {
+        main {
+          width: calc(100vw - 1.5rem);
+        }
+
+        nav.tabs {
+          width: calc(100vw - 1.5rem);
+          margin: -3.5rem auto 1.5rem;
+        }
+
+        .tab-button {
+          font-size: 0.95rem;
+          padding-inline: 0.65rem;
+        }
+
+        .tab-panel {
+          padding: 1.35rem;
+        }
+
+        .hero-countdown .time-stack,
+        .countdown-display .time-stack {
+          min-width: 90px;
+        }
+
+        .key-row {
+          grid-template-columns: 1fr;
+        }
+
+        .player-actions {
+          justify-content: center;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation-duration: 0.001ms !important;
+          animation-iteration-count: 1 !important;
+          transition-duration: 0.001ms !important;
+          scroll-behavior: auto !important;
+        }
       }
     </style>
   </head>
   <body>
-    <main>
-      <header>
-        <h1>Skeleton PWA</h1>
-        <p>A minimal Spotify playback shell with optional YouTube video search.</p>
-      </header>
-
-      <section class="card" id="spotify">
-        <h2>Spotify Playback (PKCE)</h2>
-        <p id="status">Deployed? Next step is Spotify auth.</p>
-        <div class="actions">
-          <button id="login">Log in with Spotify</button>
-          <button id="play" disabled>Play sample</button>
-          <button id="pause" disabled>Pause</button>
+    <header class="hero">
+      <div class="hero-content">
+        <h1>Days till I see Nelusik</h1>
+        <p class="hero-subtitle">Counting down to December 19 with music, memories, and secure tools.</p>
+        <div class="hero-countdown" id="hero-countdown">
+          <div class="time-stack" data-unit="days">
+            <span class="time-value" data-value>000</span>
+            <span class="time-label">Days</span>
+          </div>
+          <div class="time-stack" data-unit="hours">
+            <span class="time-value" data-value>00</span>
+            <span class="time-label">Hours</span>
+          </div>
+          <div class="time-stack" data-unit="minutes">
+            <span class="time-value" data-value>00</span>
+            <span class="time-label">Minutes</span>
+          </div>
+          <div class="time-stack" data-unit="seconds">
+            <span class="time-value" data-value>00</span>
+            <span class="time-label">Seconds</span>
+          </div>
         </div>
-        <div id="now"></div>
-      </section>
+        <p class="hero-eta" id="hero-eta">Loading countdown…</p>
+      </div>
+    </header>
 
-      <section class="card" id="youtube">
-        <h2>YouTube Videos (Search)</h2>
-        <p id="yt-status">Enter a search term to load embeddable videos. No channel ID required.</p>
-        <form id="yt-form">
-          <input id="yt-query" type="search" name="q" placeholder="Search YouTube videos" required />
-          <button type="submit">Search</button>
-        </form>
-        <div id="yt-results" aria-live="polite"></div>
-      </section>
+    <nav class="tabs" role="tablist" aria-label="Nelusik experience sections">
+      <button class="tab-button is-active" role="tab" aria-selected="true" aria-controls="panel-countdown" id="tab-countdown" data-tab="countdown">
+        Countdown
+      </button>
+      <button class="tab-button" role="tab" aria-selected="false" aria-controls="panel-spotify" id="tab-spotify" data-tab="spotify">
+        Spotify Player
+      </button>
+      <button class="tab-button" role="tab" aria-selected="false" aria-controls="panel-youtube" id="tab-youtube" data-tab="youtube">
+        YouTube Search
+      </button>
+    </nav>
+
+    <main>
+      <div class="layout">
+        <section class="panels">
+          <article id="panel-countdown" class="tab-panel is-active" role="tabpanel" aria-labelledby="tab-countdown">
+            <header class="panel-header">
+              <h2>Countdown dashboard</h2>
+              <span class="status-pill" id="countdown-status" data-state="counting">
+                <span class="status-indicator" aria-hidden="true"></span>
+                <span class="status-text">Live countdown</span>
+              </span>
+            </header>
+            <div class="countdown-main">
+              <div class="countdown-display" id="countdown-display">
+                <div class="time-stack" data-unit="days">
+                  <span class="time-value" data-value>000</span>
+                  <span class="time-label">Days</span>
+                </div>
+                <div class="time-stack" data-unit="hours">
+                  <span class="time-value" data-value>00</span>
+                  <span class="time-label">Hours</span>
+                </div>
+                <div class="time-stack" data-unit="minutes">
+                  <span class="time-value" data-value>00</span>
+                  <span class="time-label">Minutes</span>
+                </div>
+                <div class="time-stack" data-unit="seconds">
+                  <span class="time-value" data-value>00</span>
+                  <span class="time-label">Seconds</span>
+                </div>
+              </div>
+
+              <div class="progress-shell">
+                <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="countdown-progress">
+                  <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-meta">
+                  <span id="progress-percent">0% of the wait completed</span>
+                  <span id="progress-target">Targeting 19 December</span>
+                </div>
+              </div>
+
+              <dl class="countdown-details">
+                <div>
+                  <dt>Exact time remaining</dt>
+                  <dd id="countdown-exact">—</dd>
+                </div>
+                <div>
+                  <dt>Next milestone</dt>
+                  <dd id="countdown-milestone">Preparing celebration playlist…</dd>
+                </div>
+                <div>
+                  <dt>Tip</dt>
+                  <dd>Toggle the Spotify and YouTube tabs for curated vibes while you wait.</dd>
+                </div>
+              </dl>
+
+              <div class="motivation">
+                <blockquote>
+                  <p id="motivation-message">Every beat and every second brings you closer to Nelusik. Keep the anticipation joyful.</p>
+                  <footer id="motivation-footer">— Countdown companion</footer>
+                </blockquote>
+                <img src="https://images.unsplash.com/photo-1529257414770-1960ab1bdf90?auto=format&fit=crop&w=480&q=80" alt="Aurora lights over snowy mountains" loading="lazy" />
+              </div>
+            </div>
+          </article>
+
+          <article id="panel-spotify" class="tab-panel" role="tabpanel" aria-labelledby="tab-spotify" hidden>
+            <header class="panel-header">
+              <h2>Spotify player</h2>
+              <span class="status-pill" id="spotify-connection" data-state="offline">
+                <span class="status-indicator" aria-hidden="true"></span>
+                <span class="status-text">Offline</span>
+              </span>
+            </header>
+            <section class="spotify-shell">
+              <div class="spotify-card">
+                <div class="now-playing">
+                  <img src="https://placehold.co/200x200/0a0f1a/ffffff?text=Play" alt="Album artwork" id="spotify-art" loading="lazy" />
+                  <div class="track-meta">
+                    <p class="track-title" id="spotify-title">Link Spotify to begin</p>
+                    <p class="track-artist" id="spotify-artist">Your track info will appear here.</p>
+                    <div class="playback-progress" aria-hidden="true">
+                      <span id="spotify-progress" style="--progress: 0%"></span>
+                    </div>
+                    <p class="track-artist" id="spotify-status">Status: waiting for authentication.</p>
+                  </div>
+                </div>
+
+                <div class="spotify-controls">
+                  <button class="control-btn primary-action" id="spotify-login">
+                    <span aria-hidden="true">🔐</span>
+                    <span>Log in with Spotify</span>
+                  </button>
+                  <button class="control-btn" id="spotify-prev" disabled>
+                    <span aria-hidden="true">⏮</span>
+                    <span class="sr-only">Previous track</span>
+                  </button>
+                  <button class="control-btn" id="spotify-play" disabled>
+                    <span aria-hidden="true">▶️</span>
+                    <span class="sr-only">Play</span>
+                  </button>
+                  <button class="control-btn" id="spotify-pause" disabled>
+                    <span aria-hidden="true">⏸</span>
+                    <span class="sr-only">Pause</span>
+                  </button>
+                  <button class="control-btn" id="spotify-next" disabled>
+                    <span aria-hidden="true">⏭</span>
+                    <span class="sr-only">Next track</span>
+                  </button>
+                  <div class="spotify-volume">
+                    <label for="spotify-volume">Volume</label>
+                    <input type="range" id="spotify-volume" min="0" max="100" value="70" />
+                  </div>
+                </div>
+              </div>
+
+              <div class="spotify-search">
+                <form id="spotify-search-form" autocomplete="off">
+                  <input type="search" id="spotify-query" name="spotify-query" placeholder="Search songs, artists, or playlists" />
+                  <button type="submit" class="control-btn">Search Spotify</button>
+                </form>
+                <p id="spotify-search-status">Link your Spotify account to enable search.</p>
+                <div class="result-grid" id="spotify-results"></div>
+              </div>
+
+              <div class="recent-tracks">
+                <h3>Recent vibes</h3>
+                <ul id="spotify-recent"></ul>
+              </div>
+            </section>
+          </article>
+
+          <article id="panel-youtube" class="tab-panel" role="tabpanel" aria-labelledby="tab-youtube" hidden>
+            <header class="panel-header">
+              <h2>YouTube search</h2>
+              <span class="status-pill" id="youtube-connection" data-state="offline">
+                <span class="status-indicator" aria-hidden="true"></span>
+                <span class="status-text">Locked</span>
+              </span>
+            </header>
+            <section class="youtube-shell">
+              <div class="notice-card">
+                <p>
+                  <strong>Security first:</strong> Your YouTube Data API key stays on this device. It is saved in encrypted browser storage only
+                  when you click connect, never transmitted elsewhere.
+                </p>
+                <p>Restrict the key to this domain inside Google Cloud Console. Remove it anytime with the “Forget key” button.</p>
+                <div class="key-row">
+                  <label class="key-input">
+                    <span class="sr-only">YouTube API key</span>
+                    <input type="password" id="youtube-key" placeholder="Enter YouTube Data API key" autocomplete="off" />
+                    <button type="button" id="youtube-toggle" aria-label="Show API key">Show</button>
+                  </label>
+                  <button class="control-btn" id="youtube-connect">Connect</button>
+                  <button class="control-btn" id="youtube-forget">Forget key</button>
+                </div>
+                <div class="youtube-status" id="youtube-status">Awaiting secure API key.</div>
+              </div>
+
+              <section class="yt-workspace" id="youtube-workspace" hidden>
+                <div class="yt-search-row">
+                  <form id="youtube-search-form" autocomplete="off">
+                    <input type="search" id="youtube-query" name="youtube-query" placeholder="Search videos" list="youtube-suggestions" />
+                    <button type="submit" class="control-btn">Search</button>
+                  </form>
+                  <datalist id="youtube-suggestions"></datalist>
+                  <p id="youtube-search-status">Type a song, vlog, or memory to begin.</p>
+                </div>
+
+                <div class="yt-results" id="youtube-results"></div>
+
+                <div class="yt-player-area">
+                  <div class="player-frame" id="youtube-player-shell">
+                    <h3 id="youtube-player-title">Choose a video to watch</h3>
+                    <iframe id="youtube-player" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    <div class="player-actions">
+                      <button class="control-btn" id="youtube-open">Open on YouTube</button>
+                      <button class="control-btn" id="youtube-fullscreen">Full screen</button>
+                    </div>
+                  </div>
+
+                  <div class="playlist" aria-label="Playlist manager">
+                    <h3>Playlist</h3>
+                    <p id="youtube-playlist-status">Add videos to craft a reunion playlist.</p>
+                    <ul id="youtube-playlist"></ul>
+                    <div class="player-actions">
+                      <button class="control-btn" id="youtube-playlist-clear">Clear</button>
+                      <button class="control-btn" id="youtube-playlist-export">Copy links</button>
+                    </div>
+                  </div>
+
+                  <div class="history" aria-label="Viewing history">
+                    <h3>History</h3>
+                    <ul id="youtube-history"></ul>
+                    <button class="control-btn" id="youtube-history-clear">Clear history</button>
+                  </div>
+                </div>
+              </section>
+            </section>
+          </article>
+        </section>
+
+        <aside class="sidebar">
+          <section class="sidebar-card quick-stats">
+            <h3>Quick stats</h3>
+            <dl>
+              <div>
+                <dt>Days remaining</dt>
+                <dd id="sidebar-days">—</dd>
+              </div>
+              <div>
+                <dt>Countdown progress</dt>
+                <dd id="sidebar-progress">—</dd>
+              </div>
+              <div>
+                <dt>Meeting date</dt>
+                <dd id="sidebar-date">19 December</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="sidebar-card weather-card">
+            <h3>Weather check</h3>
+            <form id="weather-form">
+              <input type="search" id="weather-query" name="weather-query" placeholder="City or place" />
+              <button type="submit" class="control-btn">Update</button>
+            </form>
+            <div class="weather-output" id="weather-output">
+              <p id="weather-status">Enter a city to see the current vibe.</p>
+            </div>
+          </section>
+
+          <section class="sidebar-card calendar-card">
+            <h3>December spotlight</h3>
+            <div class="calendar-grid" id="calendar-grid"></div>
+          </section>
+
+          <section class="sidebar-card memory-card">
+            <h3>Favorite memory</h3>
+            <img src="https://images.unsplash.com/photo-1519681393784-d120267933ba?auto=format&fit=crop&w=480&q=80" alt="Two people walking under aurora lights" loading="lazy" />
+            <p>Imagine the smile on Nelusik's face under the same aurora when you finally reunite.</p>
+          </section>
+        </aside>
+      </div>
     </main>
 
-    <!-- Spotify Web Playback SDK -->
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <footer class="footer">
+      <span>© <span id="footer-year"></span> Countdown to Nelusik. Crafted with care.</span>
+      <span>
+        <a href="#" aria-label="Privacy policy">Privacy</a> ·
+        <a href="#" aria-label="API status">API status</a> ·
+        <span id="footer-updated">Last updated just now</span>
+      </span>
+      <span>
+        Contact: <a href="mailto:countdown@nelusik.me">countdown@nelusik.me</a>
+      </span>
+    </footer>
 
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
     <script type="module">
       import { ensureAuth, getAccessTokenSync } from './auth.js';
-      import { initPlayer, startPlayback, pause } from './player.js';
-      import { searchVideos } from './youtube.js';
+      import { initPlayer, startPlayback } from './player.js';
+      import {
+        hasApiKey as hasYouTubeKey,
+        initializeStoredKey,
+        setApiKey,
+        clearApiKey,
+        searchVideos
+      } from './youtube.js';
 
-      const status = document.getElementById('status');
-      const loginBtn = document.getElementById('login');
-      const playBtn = document.getElementById('play');
-      const pauseBtn = document.getElementById('pause');
+      const TARGET_MONTH = 11; // December (0-indexed)
+      const TARGET_DAY = 19;
+      const MOTIVATION_MESSAGES = [
+        {
+          text: 'Plan the playlist you will press play on when Nelusik arrives. Make it unforgettable.',
+          author: 'Future You'
+        },
+        {
+          text: 'Every sunrise is a chapter closer to December 19. Capture a photo today to share later.',
+          author: 'Daily Reminder'
+        },
+        {
+          text: 'Turn the wait into a celebration: learn a new song to sing along together.',
+          author: 'Music Muse'
+        },
+        {
+          text: 'Jot down one highlight from today. It becomes a story when you meet Nelusik.',
+          author: 'Memory Keeper'
+        }
+      ];
 
-      loginBtn.onclick = async () => { await ensureAuth(); };
+      const heroCountdown = document.getElementById('hero-countdown');
+      const heroEta = document.getElementById('hero-eta');
+      const countdownDisplay = document.getElementById('countdown-display');
+      const progressBar = document.getElementById('countdown-progress');
+      const progressFill = document.getElementById('progress-fill');
+      const progressPercent = document.getElementById('progress-percent');
+      const progressTarget = document.getElementById('progress-target');
+      const countdownExact = document.getElementById('countdown-exact');
+      const countdownMilestone = document.getElementById('countdown-milestone');
+      const countdownStatus = document.getElementById('countdown-status');
+      const countdownStatusText = countdownStatus.querySelector('.status-text');
+      const motivationMessage = document.getElementById('motivation-message');
+      const motivationFooter = document.getElementById('motivation-footer');
+      const sidebarDays = document.getElementById('sidebar-days');
+      const sidebarProgress = document.getElementById('sidebar-progress');
+      const sidebarDate = document.getElementById('sidebar-date');
+      const calendarGrid = document.getElementById('calendar-grid');
+      const footerYear = document.getElementById('footer-year');
+      const footerUpdated = document.getElementById('footer-updated');
+
+      footerYear.textContent = new Date().getFullYear();
+
+      function getTargetDate() {
+        const now = new Date();
+        let target = new Date(now.getFullYear(), TARGET_MONTH, TARGET_DAY, 0, 0, 0, 0);
+        if (target.getTime() <= now.getTime()) {
+          target = new Date(now.getFullYear() + 1, TARGET_MONTH, TARGET_DAY, 0, 0, 0, 0);
+        }
+        return target;
+      }
+
+      let targetDate = getTargetDate();
+      sidebarDate.textContent = targetDate.toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+      progressTarget.textContent = `Targeting ${targetDate.toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      })}`;
+
+      function updateCalendar(year) {
+        calendarGrid.textContent = '';
+        const daysOfWeek = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+        for (const dow of daysOfWeek) {
+          const span = document.createElement('span');
+          span.className = 'dow';
+          span.textContent = dow;
+          calendarGrid.append(span);
+        }
+
+        const first = new Date(year, TARGET_MONTH, 1);
+        const offset = first.getDay();
+        const daysInMonth = new Date(year, TARGET_MONTH + 1, 0).getDate();
+        for (let i = 0; i < offset; i++) {
+          const span = document.createElement('span');
+          span.textContent = '';
+          calendarGrid.append(span);
+        }
+        for (let day = 1; day <= daysInMonth; day++) {
+          const span = document.createElement('span');
+          span.textContent = String(day);
+          if (day === TARGET_DAY) {
+            span.classList.add('highlight');
+          }
+          calendarGrid.append(span);
+        }
+      }
+
+      updateCalendar(targetDate.getFullYear());
+
+      function formatDuration(ms) {
+        const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        const days = Math.floor(totalSeconds / (60 * 60 * 24));
+        const hours = Math.floor((totalSeconds / 3600) % 24);
+        const minutes = Math.floor((totalSeconds / 60) % 60);
+        const seconds = totalSeconds % 60;
+        return { days, hours, minutes, seconds };
+      }
+
+      function applyValues(container, values) {
+        container.querySelectorAll('[data-unit]').forEach((block) => {
+          const unit = block.getAttribute('data-unit');
+          const value = values[unit];
+          const formatted = unit === 'days' ? String(value).padStart(3, '0') : String(value).padStart(2, '0');
+          const display = block.querySelector('[data-value]');
+          if (!display) return;
+          if (display.textContent !== formatted) {
+            display.textContent = formatted;
+            display.classList.add('change');
+            block.classList.add('active');
+            setTimeout(() => display.classList.remove('change'), 750);
+            setTimeout(() => block.classList.remove('active'), 750);
+          }
+        });
+      }
+
+      function chooseMilestone({ days, hours }) {
+        if (days > 30) return 'Plenty of time to plan a special surprise.';
+        if (days > 14) return 'Time to confirm travel and gather the best stories.';
+        if (days > 7) return 'One week countdown: finalize the playlist and gifts!';
+        if (days > 2) return 'Make sure the reunion schedule is locked in.';
+        if (days === 1) return 'Tomorrow is the day! Rest up and enjoy the anticipation.';
+        if (days === 0 && hours > 0) return 'Hours to go—double-check camera batteries.';
+        if (days === 0 && hours === 0) return 'It is happening! Go greet Nelusik!';
+        return 'Celebration time—Nelusik is here!';
+      }
+
+      function updateMotivation() {
+        const entry = MOTIVATION_MESSAGES[Math.floor(Math.random() * MOTIVATION_MESSAGES.length)];
+        motivationMessage.textContent = entry.text;
+        motivationFooter.textContent = `— ${entry.author}`;
+      }
+
+      updateMotivation();
+      setInterval(updateMotivation, 1000 * 60 * 60 * 6);
+
+      let startDate = new Date(targetDate.getFullYear(), 0, 1);
+
+      function updateCountdown() {
+        const now = new Date();
+        if (now > targetDate) {
+          targetDate = getTargetDate();
+          updateCalendar(targetDate.getFullYear());
+          startDate = new Date(targetDate.getFullYear(), 0, 1);
+          progressTarget.textContent = `Targeting ${targetDate.toLocaleDateString(undefined, {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric'
+          })}`;
+        }
+
+        const diff = targetDate.getTime() - now.getTime();
+        const values = formatDuration(diff);
+        applyValues(heroCountdown, values);
+        applyValues(countdownDisplay, values);
+
+        heroEta.textContent = diff > 0
+          ? `${values.days}d ${values.hours}h ${values.minutes}m ${values.seconds}s until Nelusik`
+          : 'The wait is over!';
+
+        if (diff <= 0) {
+          countdownStatus.dataset.state = 'celebrating';
+          if (countdownStatusText) countdownStatusText.textContent = 'Celebrating';
+        } else {
+          countdownStatus.dataset.state = 'counting';
+          if (countdownStatusText) countdownStatusText.textContent = 'Live countdown';
+        }
+
+        countdownExact.textContent = diff > 0
+          ? `${values.days} days, ${values.hours} hours, ${values.minutes} minutes, ${values.seconds} seconds`
+          : 'All countdown goals reached.';
+
+        countdownMilestone.textContent = chooseMilestone(values);
+
+        const totalDuration = targetDate.getTime() - startDate.getTime();
+        const elapsed = Math.min(Math.max(now.getTime() - startDate.getTime(), 0), totalDuration);
+        const percent = totalDuration > 0 ? (elapsed / totalDuration) * 100 : 100;
+        const clamped = Math.min(100, Math.max(0, percent));
+        progressFill.style.setProperty('--progress', `${clamped}%`);
+        progressBar.setAttribute('aria-valuenow', clamped.toFixed(2));
+        progressPercent.textContent = `${clamped.toFixed(1)}% of the wait completed`;
+        sidebarProgress.textContent = progressPercent.textContent;
+        sidebarDays.textContent = diff > 0
+          ? `${values.days} day${values.days === 1 ? '' : 's'} left`
+          : 'It’s time!';
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+
+      const tabButtons = Array.from(document.querySelectorAll('.tab-button'));
+      const panels = Array.from(document.querySelectorAll('.tab-panel'));
+
+      tabButtons.forEach((button) => {
+        button.setAttribute('tabindex', button.classList.contains('is-active') ? '0' : '-1');
+        button.addEventListener('keydown', (event) => {
+          if (event.key !== 'ArrowRight' && event.key !== 'ArrowLeft') return;
+          event.preventDefault();
+          const index = tabButtons.indexOf(button);
+          const direction = event.key === 'ArrowRight' ? 1 : -1;
+          const nextIndex = (index + direction + tabButtons.length) % tabButtons.length;
+          const nextButton = tabButtons[nextIndex];
+          nextButton.click();
+          nextButton.focus();
+        });
+        button.addEventListener('click', () => {
+          const target = button.dataset.tab;
+          tabButtons.forEach((btn) => {
+            const active = btn === button;
+            btn.classList.toggle('is-active', active);
+            btn.setAttribute('aria-selected', String(active));
+            btn.setAttribute('tabindex', active ? '0' : '-1');
+          });
+          panels.forEach((panel) => {
+            const active = panel.id === `panel-${target}`;
+            panel.classList.toggle('is-active', active);
+            panel.hidden = !active;
+          });
+        });
+      });
+
+      footerUpdated.textContent = `Last updated ${new Date().toLocaleString()}`;
+
+      // Spotify integration
+      const spotifyLoginBtn = document.getElementById('spotify-login');
+      const spotifyPrevBtn = document.getElementById('spotify-prev');
+      const spotifyPlayBtn = document.getElementById('spotify-play');
+      const spotifyPauseBtn = document.getElementById('spotify-pause');
+      const spotifyNextBtn = document.getElementById('spotify-next');
+      const spotifyVolume = document.getElementById('spotify-volume');
+      const spotifyStatusText = document.getElementById('spotify-status');
+      const spotifyConnection = document.getElementById('spotify-connection');
+      const spotifyArt = document.getElementById('spotify-art');
+      const spotifyTitle = document.getElementById('spotify-title');
+      const spotifyArtist = document.getElementById('spotify-artist');
+      const spotifyProgress = document.getElementById('spotify-progress');
+      const spotifySearchForm = document.getElementById('spotify-search-form');
+      const spotifyQuery = document.getElementById('spotify-query');
+      const spotifyResults = document.getElementById('spotify-results');
+      const spotifySearchStatus = document.getElementById('spotify-search-status');
+      const spotifyRecent = document.getElementById('spotify-recent');
+
+      const RECENT_STORAGE_KEY = 'nelusik_spotify_recent_v1';
+      let spotifyPlayer = null;
+      let spotifyDeviceId = null;
+      let progressInterval = null;
+
+      function setSpotifyConnection(state, text) {
+        spotifyConnection.dataset.state = state;
+        const textEl = spotifyConnection.querySelector('.status-text');
+        if (textEl) textEl.textContent = text;
+      }
+
+      function setSpotifyStatus(message) {
+        spotifyStatusText.textContent = `Status: ${message}`;
+      }
+
+      function enableSpotifyControls(enabled) {
+        [spotifyPrevBtn, spotifyPlayBtn, spotifyPauseBtn, spotifyNextBtn, spotifyVolume].forEach((el) => {
+          el.disabled = !enabled;
+        });
+      }
+
+      function loadRecentTracks() {
+        try {
+          const items = JSON.parse(localStorage.getItem(RECENT_STORAGE_KEY) || '[]');
+          spotifyRecent.textContent = '';
+          if (!items.length) {
+            const li = document.createElement('li');
+            li.textContent = 'No recent tracks yet.';
+            spotifyRecent.append(li);
+            return;
+          }
+          for (const item of items) {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${item.title}</span><span>${item.artist}</span>`;
+            spotifyRecent.append(li);
+          }
+        } catch (error) {
+          console.error('Failed to load recent tracks', error);
+        }
+      }
+
+      function saveRecentTrack(track) {
+        try {
+          const items = JSON.parse(localStorage.getItem(RECENT_STORAGE_KEY) || '[]');
+          const existingIndex = items.findIndex((item) => item.id === track.id);
+          if (existingIndex !== -1) {
+            items.splice(existingIndex, 1);
+          }
+          items.unshift({
+            id: track.id,
+            title: track.name,
+            artist: track.artists.map((a) => a.name).join(', ')
+          });
+          localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(items.slice(0, 10)));
+          loadRecentTracks();
+        } catch (error) {
+          console.error('Failed to save recent track', error);
+        }
+      }
+
+      loadRecentTracks();
+
+      spotifyLoginBtn.addEventListener('click', async () => {
+        setSpotifyStatus('opening login window');
+        await ensureAuth();
+      });
+
+      function updateTrackProgress(state) {
+        clearInterval(progressInterval);
+        if (!state) {
+          spotifyProgress.style.setProperty('--progress', '0%');
+          return;
+        }
+        const duration = state.duration || 0;
+        if (!duration) {
+          spotifyProgress.style.setProperty('--progress', '0%');
+          return;
+        }
+        const initialPosition = state.position || 0;
+        const startTimestamp = Date.now();
+        const update = () => {
+          const elapsed = state.paused ? 0 : Date.now() - startTimestamp;
+          const position = Math.min(duration, initialPosition + elapsed);
+          const percent = Math.min(100, Math.max(0, (position / duration) * 100));
+          spotifyProgress.style.setProperty('--progress', `${percent}%`);
+        };
+        update();
+        if (!state.paused) {
+          progressInterval = setInterval(update, 1000);
+        }
+      }
+
+      async function handlePlayerState(state) {
+        if (!state) return;
+        const track = state.track_window?.current_track;
+        if (!track) return;
+        spotifyArt.src = track.album?.images?.[0]?.url || 'https://placehold.co/200x200/0a0f1a/ffffff?text=Play';
+        spotifyTitle.textContent = track.name;
+        spotifyArtist.textContent = track.artists?.map((artist) => artist.name).join(', ') || 'Unknown artist';
+        saveRecentTrack({
+          id: track.id,
+          name: track.name,
+          artists: track.artists || []
+        });
+        updateTrackProgress(state);
+        setSpotifyStatus(state.paused ? 'paused' : 'playing');
+      }
+
+      async function searchSpotify(query) {
+        const token = getAccessTokenSync();
+        if (!token) throw new Error('Log in with Spotify first.');
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 10000);
+        try {
+          const params = new URLSearchParams({
+            type: 'track',
+            limit: '10',
+            q: query
+          });
+          const res = await fetch(`https://api.spotify.com/v1/search?${params}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal
+          });
+          if (!res.ok) {
+            throw new Error(`Spotify search failed (${res.status})`);
+          }
+          const json = await res.json();
+          return json.tracks?.items || [];
+        } finally {
+          clearTimeout(timeout);
+        }
+      }
+
+      spotifySearchForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const query = spotifyQuery.value.trim();
+        if (!query) return;
+        spotifyResults.textContent = '';
+        spotifySearchStatus.textContent = 'Searching Spotify…';
+        spotifySearchStatus.classList.add('skeleton');
+        try {
+          const tracks = await searchSpotify(query);
+          spotifySearchStatus.classList.remove('skeleton');
+          if (!tracks.length) {
+            spotifySearchStatus.textContent = 'No tracks found. Try another search.';
+            return;
+          }
+          spotifySearchStatus.textContent = `Showing ${tracks.length} tracks.`;
+          const fragment = document.createDocumentFragment();
+          for (const track of tracks) {
+            const card = document.createElement('article');
+            card.className = 'result-card';
+            const img = document.createElement('img');
+            img.src = track.album?.images?.[1]?.url || track.album?.images?.[0]?.url || 'https://placehold.co/128x128/0a0f1a/ffffff?text=Track';
+            img.alt = `${track.name} cover`;
+            const info = document.createElement('div');
+            const title = document.createElement('h3');
+            title.textContent = track.name;
+            const meta = document.createElement('p');
+            const artists = track.artists?.map((artist) => artist.name).join(', ');
+            meta.textContent = `${artists} • ${track.album?.name ?? 'Unknown album'}`;
+            info.append(title, meta);
+            const playButton = document.createElement('button');
+            playButton.className = 'control-btn';
+            playButton.type = 'button';
+            playButton.textContent = 'Play track';
+            playButton.addEventListener('click', async () => {
+              if (!spotifyDeviceId) {
+                setSpotifyStatus('device not ready yet');
+                return;
+              }
+              try {
+                await startPlayback(spotifyDeviceId, { uris: [track.uri] });
+                setSpotifyStatus(`starting ${track.name}`);
+              } catch (error) {
+                console.error(error);
+                setSpotifyStatus('unable to start playback');
+              }
+            });
+            card.append(img, info, playButton);
+            fragment.append(card);
+          }
+          spotifyResults.append(fragment);
+        } catch (error) {
+          spotifySearchStatus.classList.remove('skeleton');
+          console.error(error);
+          spotifySearchStatus.textContent = error.message;
+        }
+      });
+
+      spotifyVolume.addEventListener('input', () => {
+        if (!spotifyPlayer) return;
+        spotifyPlayer.setVolume(Number(spotifyVolume.value) / 100).catch((error) => {
+          console.error(error);
+          setSpotifyStatus('volume adjustment failed');
+        });
+      });
+
+      function bindPlayerControls() {
+        spotifyPrevBtn.addEventListener('click', () => spotifyPlayer?.previousTrack());
+        spotifyNextBtn.addEventListener('click', () => spotifyPlayer?.nextTrack());
+        spotifyPlayBtn.addEventListener('click', async () => {
+          if (!spotifyPlayer) return;
+          try {
+            await spotifyPlayer.resume();
+            setSpotifyStatus('resuming playback');
+          } catch (error) {
+            console.error(error);
+            setSpotifyStatus('unable to resume');
+          }
+        });
+        spotifyPauseBtn.addEventListener('click', async () => {
+          if (!spotifyPlayer) return;
+          try {
+            await spotifyPlayer.pause();
+            setSpotifyStatus('paused');
+          } catch (error) {
+            console.error(error);
+            setSpotifyStatus('unable to pause');
+          }
+        });
+      }
+
+      bindPlayerControls();
 
       window.onSpotifyWebPlaybackSDKReady = async () => {
         const token = getAccessTokenSync();
         if (!token) {
-          status.textContent = 'Click “Log in with Spotify” first.';
+          setSpotifyStatus('click “Log in with Spotify”');
           return;
         }
-        status.textContent = 'Initializing player…';
-
-        const { deviceId, player } = await initPlayer(() => getAccessTokenSync());
-        status.textContent = `Device ready: ${deviceId}`;
-
-        playBtn.disabled = false;
-        pauseBtn.disabled = false;
-
-        // Must be triggered by a user gesture
-        playBtn.onclick = () =>
-          startPlayback(deviceId, { uris: ['spotify:track:3n3Ppam7vgaVa1iaRUc9Lp'] }); // example
-        pauseBtn.onclick = () => pause(player);
-      };
-
-      const ytForm = document.getElementById('yt-form');
-      const ytQuery = document.getElementById('yt-query');
-      const ytStatus = document.getElementById('yt-status');
-      const ytResults = document.getElementById('yt-results');
-
-      ytForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const query = ytQuery.value.trim();
-        if (!query) return;
-
-        ytStatus.textContent = `Searching for “${query}”…`;
-        ytResults.innerHTML = '';
-
+        setSpotifyConnection('connecting', 'Connecting…');
+        setSpotifyStatus('initializing device');
         try {
-          const videos = await searchVideos(query, 12);
-          if (!videos.length) {
-            ytStatus.textContent = 'No videos found. Try another search.';
-            return;
+          const { deviceId, player } = await initPlayer(() => getAccessTokenSync());
+          spotifyDeviceId = deviceId;
+          spotifyPlayer = player;
+          setSpotifyConnection('connected', 'Connected');
+          setSpotifyStatus('device ready');
+          enableSpotifyControls(true);
+
+          player.addListener('player_state_changed', (state) => {
+            handlePlayerState(state).catch((error) => console.error(error));
+          });
+
+          try {
+            const volume = await player.getVolume();
+            spotifyVolume.value = Math.round(volume * 100);
+          } catch (error) {
+            console.warn('Unable to read volume', error);
           }
-
-          ytStatus.textContent = `Showing ${videos.length} result${videos.length > 1 ? 's' : ''}.`;
-          const fragment = document.createDocumentFragment();
-
-          for (const video of videos) {
-            const card = document.createElement('article');
-            card.className = 'yt-card';
-
-            if (video.thumbnail) {
-              const img = document.createElement('img');
-              img.alt = `${video.title} thumbnail`;
-              img.loading = 'lazy';
-              img.src = video.thumbnail;
-              card.append(img);
-            }
-
-            const link = document.createElement('a');
-            link.href = `https://www.youtube.com/watch?v=${video.id}`;
-            link.target = '_blank';
-            link.rel = 'noreferrer noopener';
-
-            const heading = document.createElement('h3');
-            heading.textContent = video.title;
-            link.append(heading);
-            card.append(link);
-
-            const meta = document.createElement('p');
-            const date = video.publishedAt ? new Date(video.publishedAt) : null;
-            meta.textContent = [
-              video.channelTitle,
-              date ? date.toLocaleDateString() : null
-            ]
-              .filter(Boolean)
-              .join(' • ');
-            card.append(meta);
-
-            fragment.append(card);
-          }
-
-          ytResults.append(fragment);
         } catch (error) {
           console.error(error);
-          ytStatus.textContent = error.message;
+          setSpotifyStatus('could not connect');
+          setSpotifyConnection('error', 'Error');
+          enableSpotifyControls(false);
+          spotifyDeviceId = null;
+          spotifyPlayer = null;
+        }
+      };
+
+      // YouTube integration
+      const youtubeKeyInput = document.getElementById('youtube-key');
+      const youtubeToggle = document.getElementById('youtube-toggle');
+      const youtubeConnect = document.getElementById('youtube-connect');
+      const youtubeForget = document.getElementById('youtube-forget');
+      const youtubeStatus = document.getElementById('youtube-status');
+      const youtubeWorkspace = document.getElementById('youtube-workspace');
+      const youtubeConnection = document.getElementById('youtube-connection');
+      const youtubeSearchForm = document.getElementById('youtube-search-form');
+      const youtubeQuery = document.getElementById('youtube-query');
+      const youtubeResults = document.getElementById('youtube-results');
+      const youtubeSearchStatus = document.getElementById('youtube-search-status');
+      const youtubeSuggestions = document.getElementById('youtube-suggestions');
+      const youtubePlayer = document.getElementById('youtube-player');
+      const youtubePlayerTitle = document.getElementById('youtube-player-title');
+      const youtubeOpenBtn = document.getElementById('youtube-open');
+      const youtubeFullscreenBtn = document.getElementById('youtube-fullscreen');
+      const youtubePlayerShell = document.getElementById('youtube-player-shell');
+      const youtubePlaylist = document.getElementById('youtube-playlist');
+      const youtubePlaylistStatus = document.getElementById('youtube-playlist-status');
+      const youtubePlaylistClear = document.getElementById('youtube-playlist-clear');
+      const youtubePlaylistExport = document.getElementById('youtube-playlist-export');
+      const youtubeHistory = document.getElementById('youtube-history');
+      const youtubeHistoryClear = document.getElementById('youtube-history-clear');
+
+      const YT_HISTORY_STORAGE = 'nelusik_youtube_history_v1';
+      const YT_PLAYLIST_STORAGE = 'nelusik_youtube_playlist_v1';
+
+      const existingKey = initializeStoredKey() || '';
+      if (existingKey) {
+        youtubeKeyInput.value = existingKey;
+        applyYouTubeConnection(true);
+      }
+
+      function applyYouTubeConnection(connected) {
+        youtubeWorkspace.hidden = !connected;
+        youtubeConnection.dataset.state = connected ? 'connected' : 'offline';
+        const textEl = youtubeConnection.querySelector('.status-text');
+        if (textEl) textEl.textContent = connected ? 'Connected' : 'Locked';
+        youtubeStatus.textContent = connected
+          ? 'Key stored locally. Start searching!'
+          : 'Awaiting secure API key.';
+      }
+
+      function toggleKeyVisibility() {
+        const isPassword = youtubeKeyInput.type === 'password';
+        youtubeKeyInput.type = isPassword ? 'text' : 'password';
+        youtubeToggle.textContent = isPassword ? 'Hide' : 'Show';
+        youtubeToggle.setAttribute('aria-label', `${isPassword ? 'Hide' : 'Show'} API key`);
+      }
+
+      youtubeToggle.addEventListener('click', toggleKeyVisibility);
+
+      function handleYouTubeConnect() {
+        const key = youtubeKeyInput.value.trim();
+        if (!key) {
+          youtubeStatus.textContent = 'Enter a valid API key first.';
+          return;
+        }
+        setApiKey(key);
+        applyYouTubeConnection(true);
+        youtubeStatus.textContent = 'Connected. Key stored locally only.';
+      }
+
+      youtubeConnect.addEventListener('click', handleYouTubeConnect);
+
+      youtubeKeyInput.addEventListener('input', () => {
+        youtubeConnect.classList.toggle('primary-action', youtubeKeyInput.value.trim().length > 0);
+      });
+
+      youtubeForget.addEventListener('click', () => {
+        youtubeKeyInput.value = '';
+        clearApiKey();
+        applyYouTubeConnection(false);
+        youtubeResults.textContent = '';
+        youtubePlayer.src = '';
+        youtubePlayerTitle.textContent = 'Choose a video to watch';
+        youtubeStatus.textContent = 'API key removed from this device.';
+      });
+
+      function updateSuggestions(query) {
+        if (!query) return;
+        const option = document.createElement('option');
+        option.value = query;
+        const values = new Set(Array.from(youtubeSuggestions.children).map((o) => o.value));
+        if (!values.has(query)) {
+          youtubeSuggestions.append(option);
+        }
+      }
+
+      function renderPlaylist(items) {
+        youtubePlaylist.textContent = '';
+        if (!items.length) {
+          youtubePlaylistStatus.textContent = 'Add videos to craft a reunion playlist.';
+          return;
+        }
+        youtubePlaylistStatus.textContent = `${items.length} video${items.length === 1 ? '' : 's'} queued.`;
+        items.forEach((item, index) => {
+          const li = document.createElement('li');
+          const header = document.createElement('header');
+          header.textContent = item.title;
+          const meta = document.createElement('span');
+          meta.textContent = `${item.channel} • ${item.duration}`;
+          const actions = document.createElement('div');
+          actions.className = 'actions';
+
+          const playBtn = document.createElement('button');
+          playBtn.type = 'button';
+          playBtn.textContent = 'Play';
+          playBtn.addEventListener('click', () => playVideo(item));
+
+          const upBtn = document.createElement('button');
+          upBtn.type = 'button';
+          upBtn.textContent = '↑';
+          upBtn.addEventListener('click', () => {
+            if (index === 0) return;
+            const copy = [...items];
+            [copy[index - 1], copy[index]] = [copy[index], copy[index - 1]];
+            localStorage.setItem(YT_PLAYLIST_STORAGE, JSON.stringify(copy));
+            renderPlaylist(copy);
+          });
+
+          const downBtn = document.createElement('button');
+          downBtn.type = 'button';
+          downBtn.textContent = '↓';
+          downBtn.addEventListener('click', () => {
+            if (index === items.length - 1) return;
+            const copy = [...items];
+            [copy[index + 1], copy[index]] = [copy[index], copy[index + 1]];
+            localStorage.setItem(YT_PLAYLIST_STORAGE, JSON.stringify(copy));
+            renderPlaylist(copy);
+          });
+
+          const removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.textContent = 'Remove';
+          removeBtn.addEventListener('click', () => {
+            const copy = items.filter((_, i) => i !== index);
+            localStorage.setItem(YT_PLAYLIST_STORAGE, JSON.stringify(copy));
+            renderPlaylist(copy);
+          });
+
+          actions.append(playBtn, upBtn, downBtn, removeBtn);
+          li.append(header, meta, actions);
+          youtubePlaylist.append(li);
+        });
+      }
+
+      function loadPlaylist() {
+        try {
+          const items = JSON.parse(localStorage.getItem(YT_PLAYLIST_STORAGE) || '[]');
+          renderPlaylist(items);
+        } catch (error) {
+          console.error('Failed to load playlist', error);
+        }
+      }
+
+      loadPlaylist();
+
+      function renderHistory(items) {
+        youtubeHistory.textContent = '';
+        if (!items.length) {
+          const li = document.createElement('li');
+          li.textContent = 'No videos watched yet.';
+          youtubeHistory.append(li);
+          return;
+        }
+        items.forEach((item) => {
+          const li = document.createElement('li');
+          const header = document.createElement('header');
+          header.textContent = item.title;
+          const meta = document.createElement('span');
+          meta.textContent = `${item.channel} • ${item.watched}`;
+          li.append(header, meta);
+          youtubeHistory.append(li);
+        });
+      }
+
+      function loadHistory() {
+        try {
+          const items = JSON.parse(localStorage.getItem(YT_HISTORY_STORAGE) || '[]');
+          renderHistory(items);
+        } catch (error) {
+          console.error('Failed to load history', error);
+        }
+      }
+
+      loadHistory();
+
+      function saveHistory(video) {
+        try {
+          const items = JSON.parse(localStorage.getItem(YT_HISTORY_STORAGE) || '[]');
+          items.unshift({
+            id: video.id,
+            title: video.title,
+            channel: video.channel,
+            watched: new Date().toLocaleString()
+          });
+          localStorage.setItem(YT_HISTORY_STORAGE, JSON.stringify(items.slice(0, 15)));
+          loadHistory();
+        } catch (error) {
+          console.error('Failed to save history', error);
+        }
+      }
+
+      function playVideo(video) {
+        youtubePlayer.src = `https://www.youtube.com/embed/${video.id}`;
+        youtubePlayerTitle.textContent = video.title;
+        youtubeOpenBtn.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank', 'noopener');
+        saveHistory(video);
+      }
+
+      youtubePlaylistClear.addEventListener('click', () => {
+        localStorage.removeItem(YT_PLAYLIST_STORAGE);
+        renderPlaylist([]);
+      });
+
+      youtubePlaylistExport.addEventListener('click', async () => {
+        try {
+          const items = JSON.parse(localStorage.getItem(YT_PLAYLIST_STORAGE) || '[]');
+          if (!items.length) {
+            youtubeStatus.textContent = 'Playlist is empty.';
+            return;
+          }
+          const text = items.map((item, index) => `${index + 1}. ${item.title} — https://youtu.be/${item.id}`).join('\n');
+          await navigator.clipboard.writeText(text);
+          youtubeStatus.textContent = 'Playlist links copied to clipboard!';
+        } catch (error) {
+          console.error(error);
+          youtubeStatus.textContent = 'Unable to copy playlist.';
         }
       });
+
+      youtubeHistoryClear.addEventListener('click', () => {
+        localStorage.removeItem(YT_HISTORY_STORAGE);
+        loadHistory();
+      });
+
+      youtubeFullscreenBtn.addEventListener('click', () => {
+        const element = youtubePlayerShell;
+        if (!element) return;
+        if (document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        } else {
+          element.requestFullscreen?.().catch((error) => {
+            console.error('Fullscreen failed', error);
+            youtubeStatus.textContent = 'Fullscreen not supported in this context.';
+          });
+        }
+      });
+
+      function renderYouTubeResults(videos) {
+        youtubeResults.textContent = '';
+        if (!videos.length) {
+          youtubeSearchStatus.textContent = 'No videos found. Try different keywords.';
+          return;
+        }
+        youtubeSearchStatus.textContent = `Showing ${videos.length} video${videos.length === 1 ? '' : 's'}.`;
+        const fragment = document.createDocumentFragment();
+        for (const video of videos) {
+          const card = document.createElement('article');
+          card.className = 'yt-card';
+
+          const img = document.createElement('img');
+          img.src = video.thumbnail;
+          img.alt = `${video.title} thumbnail`;
+
+          const body = document.createElement('div');
+          body.className = 'yt-card-body';
+          const title = document.createElement('h3');
+          title.textContent = video.title;
+          const meta = document.createElement('p');
+          meta.textContent = `${video.channel} • ${video.duration}`;
+          const published = document.createElement('p');
+          published.textContent = new Date(video.publishedAt).toLocaleDateString();
+          body.append(title, meta, published);
+
+          const footer = document.createElement('footer');
+          const watchButton = document.createElement('button');
+          watchButton.type = 'button';
+          watchButton.textContent = 'Watch here';
+          watchButton.addEventListener('click', () => playVideo(video));
+
+          const addButton = document.createElement('button');
+          addButton.type = 'button';
+          addButton.textContent = 'Add to playlist';
+          addButton.addEventListener('click', () => {
+            const items = JSON.parse(localStorage.getItem(YT_PLAYLIST_STORAGE) || '[]');
+            if (items.find((item) => item.id === video.id)) {
+              youtubeStatus.textContent = 'Already in playlist.';
+              return;
+            }
+            items.push(video);
+            localStorage.setItem(YT_PLAYLIST_STORAGE, JSON.stringify(items));
+            renderPlaylist(items);
+            youtubeStatus.textContent = `${video.title} added to playlist.`;
+          });
+
+          footer.append(watchButton, addButton);
+          card.append(img, body, footer);
+          fragment.append(card);
+        }
+        youtubeResults.append(fragment);
+      }
+
+      async function performYouTubeSearch(query) {
+        youtubeSearchStatus.textContent = 'Searching YouTube…';
+        youtubeSearchStatus.classList.add('skeleton');
+        youtubeResults.textContent = '';
+        try {
+          const videos = await searchVideos(query, 12);
+          renderYouTubeResults(videos);
+          updateSuggestions(query);
+        } catch (error) {
+          console.error(error);
+          youtubeSearchStatus.textContent = error.message || 'Search failed. Check your key permissions.';
+        } finally {
+          youtubeSearchStatus.classList.remove('skeleton');
+        }
+      }
+
+      youtubeSearchForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const query = youtubeQuery.value.trim();
+        if (!query) return;
+        if (!hasYouTubeKey()) {
+          youtubeStatus.textContent = 'Connect a valid API key first.';
+          return;
+        }
+        performYouTubeSearch(query);
+      });
+
+      youtubeQuery.addEventListener('input', () => {
+        youtubeSearchStatus.textContent = 'Ready to search YouTube.';
+      });
+
+      // Weather widget
+      const weatherForm = document.getElementById('weather-form');
+      const weatherQuery = document.getElementById('weather-query');
+      const weatherOutput = document.getElementById('weather-output');
+      const weatherStatus = document.getElementById('weather-status');
+      const WEATHER_STORAGE = 'nelusik_weather_location_v1';
+
+      async function fetchWithTimeout(url, options = {}, timeoutMs = 10000) {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+        try {
+          const response = await fetch(url, { ...options, signal: controller.signal });
+          if (!response.ok) {
+            throw new Error(`Request failed (${response.status})`);
+          }
+          return await response.json();
+        } finally {
+          clearTimeout(timer);
+        }
+      }
+
+      async function loadWeather(place) {
+        if (!place) {
+          weatherStatus.textContent = 'Enter a city to see the current vibe.';
+          return;
+        }
+        weatherStatus.textContent = `Locating ${place}…`;
+        weatherOutput.classList.add('skeleton');
+        try {
+          const geoParams = new URLSearchParams({ name: place, count: '1' });
+          const geo = await fetchWithTimeout(`https://geocoding-api.open-meteo.com/v1/search?${geoParams}`);
+          const location = geo.results?.[0];
+          if (!location) {
+            weatherStatus.textContent = 'Location not found. Try another city.';
+            weatherOutput.classList.remove('skeleton');
+            return;
+          }
+          const { latitude, longitude, name, country } = location;
+          const weatherParams = new URLSearchParams({
+            latitude,
+            longitude,
+            current_weather: 'true',
+            timezone: 'auto'
+          });
+          const weather = await fetchWithTimeout(`https://api.open-meteo.com/v1/forecast?${weatherParams}`);
+          const data = weather.current_weather;
+          weatherOutput.classList.remove('skeleton');
+          weatherOutput.innerHTML = `
+            <strong>${name}, ${country}</strong>
+            <span>${data.temperature}°C — ${data.weathercode >= 3 ? 'Cloudy' : 'Clear skies'}</span>
+            <span>Wind ${data.windspeed} km/h</span>
+            <span>Updated ${new Date(data.time).toLocaleTimeString()}</span>
+          `;
+          weatherStatus.textContent = 'Weather updated.';
+          localStorage.setItem(WEATHER_STORAGE, place);
+        } catch (error) {
+          console.error(error);
+          weatherStatus.textContent = 'Unable to load weather right now.';
+          weatherOutput.classList.remove('skeleton');
+        }
+      }
+
+      weatherForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        loadWeather(weatherQuery.value.trim());
+      });
+
+      const storedWeather = localStorage.getItem(WEATHER_STORAGE);
+      if (storedWeather) {
+        weatherQuery.value = storedWeather;
+        loadWeather(storedWeather);
+      }
     </script>
   </body>
 </html>
