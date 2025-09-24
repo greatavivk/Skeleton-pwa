@@ -799,12 +799,23 @@
         gap: 0.75rem;
       }
 
-      .player-frame iframe {
+      .youtube-player-wrapper {
+        position: relative;
         width: 100%;
         aspect-ratio: 16 / 9;
+        border-radius: 14px;
+        overflow: hidden;
+        background: #000;
+      }
+
+      .youtube-player-wrapper iframe,
+      .youtube-player-wrapper #youtube-player {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
         border: none;
         border-radius: 14px;
-        background: #000;
       }
 
       .player-actions {
@@ -1287,7 +1298,9 @@
                 <div class="yt-player-area">
                   <div class="player-frame" id="youtube-player-shell">
                     <h3 id="youtube-player-title">Choose a video to watch</h3>
-                    <iframe id="youtube-player" title="YouTube video player" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                    <div class="youtube-player-wrapper">
+                      <div id="youtube-player" role="region" aria-label="YouTube video player"></div>
+                    </div>
                     <div class="player-actions">
                       <button class="control-btn" id="youtube-open">Open on YouTube</button>
                       <button class="control-btn" id="youtube-fullscreen">Full screen</button>
@@ -1903,11 +1916,11 @@
       const youtubeResults = document.getElementById('youtube-results');
       const youtubeSearchStatus = document.getElementById('youtube-search-status');
       const youtubeSuggestions = document.getElementById('youtube-suggestions');
-      const youtubePlayer = document.getElementById('youtube-player');
       const youtubePlayerTitle = document.getElementById('youtube-player-title');
       const youtubeOpenBtn = document.getElementById('youtube-open');
       const youtubeFullscreenBtn = document.getElementById('youtube-fullscreen');
       const youtubePlayerShell = document.getElementById('youtube-player-shell');
+      const youtubePlayerWrapper = youtubePlayerShell.querySelector('.youtube-player-wrapper');
       const youtubePlaylist = document.getElementById('youtube-playlist');
       const youtubePlaylistStatus = document.getElementById('youtube-playlist-status');
       const youtubePlaylistClear = document.getElementById('youtube-playlist-clear');
@@ -1917,6 +1930,64 @@
 
       const YT_HISTORY_STORAGE = 'nelusik_youtube_history_v1';
       const YT_PLAYLIST_STORAGE = 'nelusik_youtube_playlist_v1';
+
+      let youtubePlayerInstance = null;
+      let youtubeApiPromise = null;
+
+      function ensureYouTubePlaceholder() {
+        if (!youtubePlayerWrapper) return;
+        if (!youtubePlayerWrapper.querySelector('#youtube-player')) {
+          const placeholder = document.createElement('div');
+          placeholder.id = 'youtube-player';
+          placeholder.setAttribute('role', 'region');
+          placeholder.setAttribute('aria-label', 'YouTube video player');
+          youtubePlayerWrapper.append(placeholder);
+        }
+      }
+
+      function destroyYouTubePlayer() {
+        if (youtubePlayerInstance) {
+          youtubePlayerInstance.destroy();
+          youtubePlayerInstance = null;
+        }
+        if (youtubePlayerWrapper) {
+          youtubePlayerWrapper.innerHTML = '';
+          const placeholder = document.createElement('div');
+          placeholder.id = 'youtube-player';
+          placeholder.setAttribute('role', 'region');
+          placeholder.setAttribute('aria-label', 'YouTube video player');
+          youtubePlayerWrapper.append(placeholder);
+        }
+        youtubeOpenBtn.onclick = null;
+      }
+
+      function loadYouTubePlayerAPI() {
+        if (window.YT?.Player) {
+          return Promise.resolve(window.YT);
+        }
+        if (youtubeApiPromise) {
+          return youtubeApiPromise;
+        }
+        youtubeApiPromise = new Promise((resolve, reject) => {
+          const previous = window.onYouTubeIframeAPIReady;
+          window.onYouTubeIframeAPIReady = () => {
+            if (typeof previous === 'function') {
+              previous();
+            }
+            resolve(window.YT);
+            window.onYouTubeIframeAPIReady = previous || undefined;
+          };
+          const script = document.createElement('script');
+          script.src = 'https://www.youtube.com/iframe_api';
+          script.async = true;
+          script.onerror = () => {
+            youtubeApiPromise = null;
+            reject(new Error('Failed to load YouTube Player API.'));
+          };
+          document.head.append(script);
+        });
+        return youtubeApiPromise;
+      }
 
       const existingKey = initializeStoredKey() || '';
       if (existingKey) {
@@ -1932,6 +2003,10 @@
         youtubeStatus.textContent = connected
           ? 'Key stored locally. Start searching!'
           : 'Awaiting secure API key.';
+        if (!connected) {
+          destroyYouTubePlayer();
+          youtubePlayerTitle.textContent = 'Choose a video to watch';
+        }
       }
 
       function toggleKeyVisibility() {
@@ -1965,7 +2040,6 @@
         clearApiKey();
         applyYouTubeConnection(false);
         youtubeResults.textContent = '';
-        youtubePlayer.src = '';
         youtubePlayerTitle.textContent = 'Choose a video to watch';
         youtubeStatus.textContent = 'API key removed from this device.';
       });
@@ -2095,11 +2169,35 @@
         }
       }
 
-      function playVideo(video) {
-        youtubePlayer.src = `https://www.youtube.com/embed/${video.id}`;
+      async function playVideo(video) {
         youtubePlayerTitle.textContent = video.title;
         youtubeOpenBtn.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank', 'noopener');
-        saveHistory(video);
+        try {
+          const YT = await loadYouTubePlayerAPI();
+          ensureYouTubePlaceholder();
+          if (youtubePlayerInstance) {
+            youtubePlayerInstance.loadVideoById(video.id);
+          } else {
+            youtubePlayerInstance = new YT.Player('youtube-player', {
+              videoId: video.id,
+              playerVars: {
+                rel: 0,
+                modestbranding: 1,
+                playsinline: 1
+              },
+              events: {
+                onError: (event) => {
+                  console.error('YouTube player error', event);
+                  youtubeStatus.textContent = 'Unable to play this video. Try another one.';
+                }
+              }
+            });
+          }
+          saveHistory(video);
+        } catch (error) {
+          console.error('Failed to load YouTube player', error);
+          youtubeStatus.textContent = 'Unable to load the YouTube player. Please try again.';
+        }
       }
 
       youtubePlaylistClear.addEventListener('click', () => {
@@ -2129,15 +2227,32 @@
       });
 
       youtubeFullscreenBtn.addEventListener('click', () => {
-        const element = youtubePlayerShell;
-        if (!element) return;
+        const iframeElement = youtubePlayerShell?.querySelector('iframe');
+        const target = iframeElement || youtubePlayerShell;
+        if (!target) return;
         if (document.fullscreenElement) {
-          document.exitFullscreen().catch(() => {});
-        } else {
-          element.requestFullscreen?.().catch((error) => {
+          const exit =
+            document.exitFullscreen ||
+            document.webkitExitFullscreen ||
+            document.mozCancelFullScreen ||
+            document.msExitFullscreen;
+          if (exit) {
+            Promise.resolve(exit.call(document)).catch(() => {});
+          }
+          return;
+        }
+        const request =
+          target.requestFullscreen ||
+          target.webkitRequestFullscreen ||
+          target.mozRequestFullScreen ||
+          target.msRequestFullscreen;
+        if (request) {
+          Promise.resolve(request.call(target)).catch((error) => {
             console.error('Fullscreen failed', error);
             youtubeStatus.textContent = 'Fullscreen not supported in this context.';
           });
+        } else {
+          youtubeStatus.textContent = 'Fullscreen not supported in this context.';
         }
       });
 
