@@ -23,7 +23,8 @@ A modern, single-page progressive web app that keeps the anticipation for Decemb
 ## Wire up Spotify (required for playback)
 1. Create a Spotify Developer application.
 2. Add **Redirect URI**: your deployed origin with a trailing slash (e.g. `https://<project>.vercel.app/`).
-3. Paste the **Client ID** into `auth.js` replacing `YOUR_SPOTIFY_CLIENT_ID`.
+3. The Nelusik deployment already ships with Client ID `1bc3566e5b8f4ae1bbaafec8950f4c86` in `auth.js`. If you spin up your own Spotify
+   application, swap that value for your Client ID before redeploying.
 4. Redeploy. When you open the app, click **Log in with Spotify** and approve the scopes. Playback features require a Spotify Premium account.
 5. Use the search bar to trigger playback on your Web Playback device.
 

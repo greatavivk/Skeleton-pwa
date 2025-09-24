@@ -6,8 +6,8 @@ const SCOPES = [
   'user-read-currently-playing'
 ].join(' ');
 
-// 👉 USER ACTION LATER: replace with the real Spotify Client ID after creating the Spotify app
-const CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID';
+// Spotify Client ID provided for the Nelusik countdown deployment
+const CLIENT_ID = '1bc3566e5b8f4ae1bbaafec8950f4c86';
 
 // Redirect URI automatically matches the deployed origin, e.g. https://<project>.vercel.app/
 const REDIRECT_URI = `${location.origin}/`;

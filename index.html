@@ -2001,7 +2001,7 @@
         const textEl = youtubeConnection.querySelector('.status-text');
         if (textEl) textEl.textContent = connected ? 'Connected' : 'Locked';
         youtubeStatus.textContent = connected
-          ? 'Key stored locally. Start searching!'
+          ? 'Key stored locally. Search and the official player loads automatically.'
           : 'Awaiting secure API key.';
         if (!connected) {
           destroyYouTubePlayer();
@@ -2026,7 +2026,7 @@
         }
         setApiKey(key);
         applyYouTubeConnection(true);
-        youtubeStatus.textContent = 'Connected. Key stored locally only.';
+        youtubeStatus.textContent = 'Connected. Key stored locally only—the embedded player loads as soon as you watch something.';
       }
 
       youtubeConnect.addEventListener('click', handleYouTubeConnect);
@@ -2172,27 +2172,71 @@
       async function playVideo(video) {
         youtubePlayerTitle.textContent = video.title;
         youtubeOpenBtn.onclick = () => window.open(`https://www.youtube.com/watch?v=${video.id}`, '_blank', 'noopener');
+        youtubeStatus.textContent = 'Loading video…';
         try {
           const YT = await loadYouTubePlayerAPI();
           ensureYouTubePlaceholder();
-          if (youtubePlayerInstance) {
-            youtubePlayerInstance.loadVideoById(video.id);
-          } else {
+
+          const playerVars = {
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1
+          };
+          if (typeof location !== 'undefined' && location.origin && location.origin !== 'null') {
+            playerVars.origin = location.origin;
+          }
+
+          const createPlayer = () => {
             youtubePlayerInstance = new YT.Player('youtube-player', {
               videoId: video.id,
-              playerVars: {
-                rel: 0,
-                modestbranding: 1,
-                playsinline: 1
-              },
+              playerVars,
               events: {
+                onReady: (event) => {
+                  try {
+                    event.target.playVideo();
+                    youtubeStatus.textContent = 'Playing inside the embedded player.';
+                  } catch (readyError) {
+                    console.warn('Autoplay prevented', readyError);
+                    youtubeStatus.textContent = 'Press play in the embedded player to start.';
+                  }
+                },
                 onError: (event) => {
                   console.error('YouTube player error', event);
                   youtubeStatus.textContent = 'Unable to play this video. Try another one.';
                 }
               }
             });
+          };
+
+          if (youtubePlayerInstance && typeof youtubePlayerInstance.loadVideoById === 'function') {
+            try {
+              youtubePlayerInstance.loadVideoById(video.id);
+              if (typeof youtubePlayerInstance.playVideo === 'function') {
+                youtubePlayerInstance.playVideo();
+              }
+              youtubeStatus.textContent = 'Playing inside the embedded player.';
+            } catch (loadError) {
+              console.error('YouTube player load error', loadError);
+              try {
+                youtubePlayerInstance.destroy?.();
+              } catch (destroyError) {
+                console.warn('Failed to reset YouTube player', destroyError);
+              }
+              youtubePlayerInstance = null;
+              createPlayer();
+            }
+          } else {
+            if (youtubePlayerInstance) {
+              try {
+                youtubePlayerInstance.destroy?.();
+              } catch (destroyError) {
+                console.warn('Failed to reset YouTube player', destroyError);
+              }
+              youtubePlayerInstance = null;
+            }
+            createPlayer();
           }
+
           saveHistory(video);
         } catch (error) {
           console.error('Failed to load YouTube player', error);
