@@ -7,7 +7,7 @@ const SCOPES = [
 ].join(' ');
 
 // 👉 USER ACTION LATER: replace with the real Spotify Client ID after creating the Spotify app
-const CLIENT_ID = '1bc3566e5b8f4ae1bbaafec8950f4c86;
+const CLIENT_ID = '1bc3566e5b8f4ae1bbaafec8950f4c86';
 
 // Redirect URI automatically matches the deployed origin, e.g. https://<project>.vercel.app/
 const REDIRECT_URI = `${location.origin}/`;
@@ -32,6 +32,11 @@ export async function ensureAuth() {
   if (!CLIENT_ID || CLIENT_ID.includes('YOUR_SPOTIFY_CLIENT_ID')) {
     alert('Add your Spotify Client ID in auth.js first.');
     return;
+  }
+
+  if (!window.isSecureContext || (typeof crypto === 'undefined') || !crypto.subtle) {
+    alert('Spotify login requires HTTPS (secure context). Deploy the app over HTTPS and try again.');
+    throw new Error('PKCE requires a secure context');
   }
 
   // Handle OAuth redirect
