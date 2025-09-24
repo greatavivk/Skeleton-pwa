@@ -5,15 +5,187 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Skeleton PWA</title>
     <link rel="manifest" href="manifest.webmanifest" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+      }
+
+      body {
+        margin: 0;
+        padding: 2rem;
+        background: #f7f7f8;
+        color: #111;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        body {
+          background: #111217;
+          color: #f1f3f9;
+        }
+      }
+
+      main {
+        display: grid;
+        gap: 1.75rem;
+        max-width: 960px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(2.25rem, 4vw, 3rem);
+      }
+
+      .card {
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 18px;
+        padding: 1.75rem;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        display: grid;
+        gap: 1rem;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .card {
+          background: rgba(30, 34, 45, 0.9);
+          border-color: rgba(148, 163, 184, 0.25);
+        }
+      }
+
+      button,
+      input,
+      select {
+        font: inherit;
+        padding: 0.65rem 1.1rem;
+        border-radius: 999px;
+        border: 1px solid rgba(100, 116, 139, 0.35);
+        background: rgba(255, 255, 255, 0.9);
+        color: inherit;
+      }
+
+      button {
+        cursor: pointer;
+        font-weight: 600;
+        background: linear-gradient(135deg, #1db954, #1a8d44);
+        border: none;
+        color: white;
+        box-shadow: 0 14px 32px rgba(29, 185, 84, 0.35);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        background: rgba(148, 163, 184, 0.3);
+        color: rgba(15, 23, 42, 0.6);
+        box-shadow: none;
+      }
+
+      button:not(:disabled):hover {
+        transform: translateY(-1px);
+        box-shadow: 0 20px 40px rgba(29, 185, 84, 0.4);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      #yt-results {
+        display: grid;
+        gap: 1rem;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      }
+
+      .yt-card {
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        background: rgba(241, 245, 249, 0.9);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .yt-card {
+          background: rgba(30, 34, 45, 0.75);
+          border-color: rgba(148, 163, 184, 0.2);
+        }
+      }
+
+      .yt-card img {
+        width: 100%;
+        display: block;
+      }
+
+      .yt-card h3 {
+        font-size: 1rem;
+        margin: 0 1rem;
+      }
+
+      .yt-card p {
+        margin: 0 1rem 1rem;
+        color: rgba(15, 23, 42, 0.75);
+        font-size: 0.85rem;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        .yt-card p {
+          color: rgba(226, 232, 240, 0.75);
+        }
+      }
+
+      .yt-card a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .yt-card a:hover h3 {
+        text-decoration: underline;
+      }
+
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        align-items: center;
+      }
+
+      #yt-query {
+        flex: 1 1 220px;
+      }
+    </style>
   </head>
   <body>
     <main>
-      <h1>Skeleton PWA</h1>
-      <p id="status">Deployed? Next step is Spotify auth.</p>
-      <button id="login">Log in with Spotify</button>
-      <button id="play" disabled>Play sample</button>
-      <button id="pause" disabled>Pause</button>
-      <div id="now"></div>
+      <header>
+        <h1>Skeleton PWA</h1>
+        <p>A minimal Spotify playback shell with optional YouTube video search.</p>
+      </header>
+
+      <section class="card" id="spotify">
+        <h2>Spotify Playback (PKCE)</h2>
+        <p id="status">Deployed? Next step is Spotify auth.</p>
+        <div class="actions">
+          <button id="login">Log in with Spotify</button>
+          <button id="play" disabled>Play sample</button>
+          <button id="pause" disabled>Pause</button>
+        </div>
+        <div id="now"></div>
+      </section>
+
+      <section class="card" id="youtube">
+        <h2>YouTube Videos (Search)</h2>
+        <p id="yt-status">Enter a search term to load embeddable videos. No channel ID required.</p>
+        <form id="yt-form">
+          <input id="yt-query" type="search" name="q" placeholder="Search YouTube videos" required />
+          <button type="submit">Search</button>
+        </form>
+        <div id="yt-results" aria-live="polite"></div>
+      </section>
     </main>
 
     <!-- Spotify Web Playback SDK -->
@@ -22,6 +194,7 @@
     <script type="module">
       import { ensureAuth, getAccessTokenSync } from './auth.js';
       import { initPlayer, startPlayback, pause } from './player.js';
+      import { searchVideos } from './youtube.js';
 
       const status = document.getElementById('status');
       const loginBtn = document.getElementById('login');
@@ -49,6 +222,71 @@
           startPlayback(deviceId, { uris: ['spotify:track:3n3Ppam7vgaVa1iaRUc9Lp'] }); // example
         pauseBtn.onclick = () => pause(player);
       };
+
+      const ytForm = document.getElementById('yt-form');
+      const ytQuery = document.getElementById('yt-query');
+      const ytStatus = document.getElementById('yt-status');
+      const ytResults = document.getElementById('yt-results');
+
+      ytForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const query = ytQuery.value.trim();
+        if (!query) return;
+
+        ytStatus.textContent = `Searching for “${query}”…`;
+        ytResults.innerHTML = '';
+
+        try {
+          const videos = await searchVideos(query, 12);
+          if (!videos.length) {
+            ytStatus.textContent = 'No videos found. Try another search.';
+            return;
+          }
+
+          ytStatus.textContent = `Showing ${videos.length} result${videos.length > 1 ? 's' : ''}.`;
+          const fragment = document.createDocumentFragment();
+
+          for (const video of videos) {
+            const card = document.createElement('article');
+            card.className = 'yt-card';
+
+            if (video.thumbnail) {
+              const img = document.createElement('img');
+              img.alt = `${video.title} thumbnail`;
+              img.loading = 'lazy';
+              img.src = video.thumbnail;
+              card.append(img);
+            }
+
+            const link = document.createElement('a');
+            link.href = `https://www.youtube.com/watch?v=${video.id}`;
+            link.target = '_blank';
+            link.rel = 'noreferrer noopener';
+
+            const heading = document.createElement('h3');
+            heading.textContent = video.title;
+            link.append(heading);
+            card.append(link);
+
+            const meta = document.createElement('p');
+            const date = video.publishedAt ? new Date(video.publishedAt) : null;
+            meta.textContent = [
+              video.channelTitle,
+              date ? date.toLocaleDateString() : null
+            ]
+              .filter(Boolean)
+              .join(' • ');
+            card.append(meta);
+
+            fragment.append(card);
+          }
+
+          ytResults.append(fragment);
+        } catch (error) {
+          console.error(error);
+          ytStatus.textContent = error.message;
+        }
+      });
     </script>
   </body>
 </html>
