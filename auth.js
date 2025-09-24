@@ -34,6 +34,11 @@ export async function ensureAuth() {
     return;
   }
 
+  if (!window.isSecureContext || (typeof crypto === 'undefined') || !crypto.subtle) {
+    alert('Spotify login requires HTTPS (secure context). Deploy the app over HTTPS and try again.');
+    throw new Error('PKCE requires a secure context');
+  }
+
   // Handle OAuth redirect
   const params = new URLSearchParams(location.search);
   if (params.has('code')) {
