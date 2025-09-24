@@ -3,18 +3,20 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Skeleton PWA Media Hub</title>
+    <title>Nelusik Countdown & Spotify Hub</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <style>
       :root {
         color-scheme: light dark;
-        --bg: #f5f6fb;
-        --text: #111827;
-        --muted: #5f6b7b;
-        --card-bg: rgba(255, 255, 255, 0.92);
-        --card-border: rgba(17, 24, 39, 0.08);
-        --surface: rgba(255, 255, 255, 0.7);
-        --accent: #2563eb;
+        --bg: #f5f7fb;
+        --bg-gradient: radial-gradient(circle at 15% 20%, rgba(96, 165, 250, 0.2), transparent 55%),
+          radial-gradient(circle at 85% 15%, rgba(244, 114, 182, 0.16), transparent 60%);
+        --text: #0f172a;
+        --muted: #64748b;
+        --card-bg: rgba(255, 255, 255, 0.88);
+        --card-soft: rgba(255, 255, 255, 0.7);
+        --border: rgba(15, 23, 42, 0.12);
+        --accent: #6366f1;
         --accent-contrast: #ffffff;
         font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         background-color: var(--bg);
@@ -22,14 +24,16 @@
 
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg: #0f172a;
+          --bg: #0b1120;
+          --bg-gradient: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.28), transparent 60%),
+            radial-gradient(circle at 80% 15%, rgba(236, 72, 153, 0.22), transparent 65%);
           --text: #f8fafc;
           --muted: #cbd5f5;
           --card-bg: rgba(15, 23, 42, 0.85);
-          --card-border: rgba(148, 163, 184, 0.2);
-          --surface: rgba(30, 41, 59, 0.7);
-          --accent: #60a5fa;
-          --accent-contrast: #0f172a;
+          --card-soft: rgba(30, 41, 59, 0.65);
+          --border: rgba(148, 163, 184, 0.24);
+          --accent: #a855f7;
+          --accent-contrast: #0b1120;
         }
       }
 
@@ -40,50 +44,51 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background: radial-gradient(circle at top, rgba(99, 102, 241, 0.18), transparent 55%),
-          var(--bg);
+        background: var(--bg-gradient), var(--bg);
         color: var(--text);
       }
 
       main {
         max-width: 1000px;
         margin: 0 auto;
-        padding: 3rem 1.5rem 4rem;
+        padding: clamp(3rem, 6vw, 4.5rem) 1.5rem clamp(5rem, 8vw, 6rem);
         display: grid;
-        gap: 2rem;
+        gap: clamp(2rem, 4vw, 3rem);
       }
 
       header.hero {
+        text-align: center;
         display: grid;
         gap: 0.75rem;
-        text-align: center;
       }
 
       header.hero h1 {
-        font-size: clamp(2.25rem, 4vw, 3rem);
         margin: 0;
+        font-size: clamp(2.4rem, 6vw, 3.2rem);
+        letter-spacing: -0.03em;
       }
 
       header.hero p {
         margin: 0 auto;
-        max-width: 42ch;
+        max-width: 46ch;
         color: var(--muted);
         font-size: 1.05rem;
       }
 
       section.card {
         background: var(--card-bg);
-        border: 1px solid var(--card-border);
-        border-radius: 20px;
-        padding: clamp(1.5rem, 3vw, 2.25rem);
-        box-shadow: 0 20px 55px rgba(15, 23, 42, 0.14);
+        border-radius: 24px;
+        padding: clamp(1.8rem, 4vw, 2.6rem);
+        border: 1px solid var(--border);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
         display: grid;
-        gap: 1.25rem;
+        gap: clamp(1.5rem, 3vw, 2rem);
+        backdrop-filter: blur(18px);
       }
 
       section.card h2 {
         margin: 0;
-        font-size: 1.4rem;
+        font-size: 1.6rem;
       }
 
       .muted {
@@ -92,38 +97,43 @@
       }
 
       .small {
-        font-size: 0.85rem;
+        font-size: 0.9rem;
       }
 
-      .counter-display {
-        display: inline-grid;
-        grid-template-columns: repeat(3, minmax(3rem, 1fr));
-        align-items: center;
+      .countdown-grid {
+        display: grid;
+        gap: clamp(1rem, 2vw, 1.5rem);
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
+
+      .countdown-unit {
+        background: var(--card-soft);
+        border-radius: 18px;
+        padding: clamp(1.25rem, 2.5vw, 1.75rem);
+        display: grid;
         justify-items: center;
-        gap: 0.75rem;
-        align-self: center;
+        gap: 0.45rem;
+        border: 1px solid transparent;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 20px 40px rgba(15, 23, 42, 0.08);
       }
 
-      .counter-display button {
-        width: 3.25rem;
-        height: 3.25rem;
-        border-radius: 999px;
-        font-size: 1.75rem;
-        font-weight: 600;
-      }
-
-      output#counter-value {
-        font-size: clamp(2.5rem, 8vw, 3.5rem);
-        font-variant-numeric: tabular-nums;
+      .countdown-value {
+        font-size: clamp(2.6rem, 8vw, 3.9rem);
         font-weight: 700;
-        min-width: 5rem;
-        text-align: center;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
       }
 
-      .counter-actions {
-        display: flex;
-        justify-content: center;
-        gap: 0.75rem;
+      .countdown-label {
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 0.75rem;
+      }
+
+      #countdown-status {
+        text-align: center;
+        font-size: 0.95rem;
+        color: var(--muted);
       }
 
       .button-row {
@@ -141,30 +151,30 @@
       button {
         border-radius: 999px;
         border: 1px solid transparent;
-        padding: 0.65rem 1.4rem;
+        padding: 0.65rem 1.5rem;
         font-weight: 600;
         cursor: pointer;
         background: var(--accent);
         color: var(--accent-contrast);
         transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
-        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.2);
+        box-shadow: 0 16px 35px rgba(99, 102, 241, 0.28);
       }
 
       button:hover:not(:disabled) {
         transform: translateY(-1px);
-        filter: brightness(1.05);
+        filter: brightness(1.06);
       }
 
       button:disabled {
         cursor: not-allowed;
         opacity: 0.6;
-        filter: saturate(0.5);
+        filter: saturate(0.6);
       }
 
       button.secondary {
         background: transparent;
         color: var(--text);
-        border-color: var(--card-border);
+        border-color: var(--border);
         box-shadow: none;
       }
 
@@ -175,28 +185,27 @@
 
       label.field {
         display: grid;
-        gap: 0.35rem;
+        gap: 0.45rem;
       }
 
       label.field span {
         font-weight: 600;
+        font-size: 0.95rem;
       }
 
-      input[type='text'],
-      input[type='password'] {
-        border-radius: 12px;
-        border: 1px solid var(--card-border);
-        padding: 0.75rem 1rem;
-        background: var(--surface);
+      input[type='text'] {
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        padding: 0.85rem 1rem;
+        background: var(--card-soft);
         color: inherit;
         transition: border-color 0.2s ease, box-shadow 0.2s ease;
       }
 
-      input[type='text']:focus,
-      input[type='password']:focus {
+      input[type='text']:focus {
         outline: none;
         border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.28);
       }
 
       #now {
@@ -212,85 +221,93 @@
         color: #15803d;
       }
 
-      .youtube-results {
+      .search-form {
         display: grid;
-        gap: 1.25rem;
-      }
-
-      .yt-card {
-        display: grid;
-        grid-template-columns: minmax(180px, 240px) 1fr;
         gap: 1rem;
-        background: var(--surface);
-        border-radius: 16px;
-        padding: 1rem;
-        border: 1px solid var(--card-border);
       }
 
-      .yt-card img {
+      .spotify-results {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .spotify-track {
+        display: grid;
+        grid-template-columns: minmax(96px, 120px) 1fr;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        background: var(--card-soft);
+        border-radius: 18px;
+        border: 1px solid rgba(99, 102, 241, 0.08);
+      }
+
+      .spotify-track img {
         width: 100%;
-        border-radius: 12px;
+        border-radius: 14px;
         display: block;
       }
 
-      .yt-meta {
+      .spotify-track-meta {
         display: grid;
-        gap: 0.35rem;
+        gap: 0.5rem;
         align-content: start;
       }
 
-      .yt-meta a {
-        color: inherit;
-        font-weight: 600;
-        text-decoration: none;
+      .spotify-track-title {
+        margin: 0;
+        font-size: 1.05rem;
       }
 
-      .yt-meta a:hover {
-        text-decoration: underline;
+      .spotify-track-details {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .spotify-track-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+      }
+
+      a.link-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 0.6rem 1.3rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        color: var(--text);
+        transition: border-color 0.2s ease, color 0.2s ease;
+      }
+
+      a.link-button:hover {
+        border-color: var(--accent);
         color: var(--accent);
       }
 
-      .yt-channel {
-        font-size: 0.95rem;
-        color: var(--muted);
-      }
-
-      .yt-date {
-        font-size: 0.85rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: var(--muted);
-      }
-
-      .yt-description {
-        font-size: 0.95rem;
-        color: var(--text);
-        opacity: 0.9;
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-      }
-
-      @media (max-width: 900px) {
-        .yt-card {
+      @media (max-width: 720px) {
+        .spotify-track {
           grid-template-columns: 1fr;
+        }
+
+        .spotify-track img {
+          max-width: 220px;
+          justify-self: center;
         }
       }
 
-      @media (max-width: 600px) {
+      @media (max-width: 580px) {
         .button-row {
           flex-direction: column;
           align-items: stretch;
         }
 
-        button,
-        .counter-display button {
+        button {
           width: 100%;
-        }
-
-        .counter-display {
-          grid-template-columns: repeat(3, minmax(2.75rem, 1fr));
         }
       }
     </style>
@@ -298,63 +315,64 @@
   <body>
     <main>
       <header class="hero">
-        <h1>Skeleton PWA Media Hub</h1>
+        <h1>Until I see Nelusik</h1>
         <p>
-          A single offline-friendly surface that keeps your counter tidy, wires up Spotify’s
-          Web Playback SDK, and performs quick YouTube Data API searches.
+          Count down the moments until December 19 and queue the perfect soundtrack with Spotify search and playback.
         </p>
       </header>
 
-      <section class="card" id="counter-card">
-        <h2>Session counter</h2>
-        <p class="muted">Keep a running tally that survives refreshes and works offline.</p>
-        <div class="counter-display" role="group" aria-label="Counter controls">
-          <button id="counter-decrement" type="button" aria-label="Decrease counter">−</button>
-          <output id="counter-value" role="status" aria-live="polite">0</output>
-          <button id="counter-increment" type="button" aria-label="Increase counter">+</button>
+      <section class="card" id="countdown-card">
+        <h2>Precise countdown</h2>
+        <p class="muted">Every second brings December 19 closer.</p>
+        <div class="countdown-grid" role="group" aria-label="Countdown to December 19">
+          <article class="countdown-unit">
+            <span class="countdown-value" id="countdown-days">00</span>
+            <span class="countdown-label">Days</span>
+          </article>
+          <article class="countdown-unit">
+            <span class="countdown-value" id="countdown-hours">00</span>
+            <span class="countdown-label">Hours</span>
+          </article>
+          <article class="countdown-unit">
+            <span class="countdown-value" id="countdown-minutes">00</span>
+            <span class="countdown-label">Minutes</span>
+          </article>
+          <article class="countdown-unit">
+            <span class="countdown-value" id="countdown-seconds">00</span>
+            <span class="countdown-label">Seconds</span>
+          </article>
         </div>
-        <div class="counter-actions">
-          <button id="counter-reset" type="button" class="secondary">Reset</button>
-        </div>
+        <p id="countdown-status" class="muted small"></p>
       </section>
 
       <section class="card" id="spotify-card">
-        <h2>Spotify playback</h2>
-        <p class="muted spotify-status" id="spotify-status">Waiting for Spotify SDK…</p>
+        <h2>Spotify player &amp; search</h2>
+        <p class="muted">
+          Log in with Spotify Premium to control playback directly in the browser, or search for the right song and start it
+          instantly.
+        </p>
+        <p class="muted small spotify-status" id="spotify-status">Waiting for Spotify SDK…</p>
         <div class="button-row">
           <button id="login" type="button">Log in with Spotify</button>
           <button id="play" type="button" disabled>Play sample</button>
           <button id="pause" type="button" disabled class="secondary">Pause</button>
         </div>
-        <div id="now" aria-live="polite" aria-atomic="true">Nothing playing yet.</div>
-        <p class="muted small">Requires Spotify Premium. Sample track: Daft Punk – Harder, Better, Faster, Stronger.</p>
-      </section>
-
-      <section class="card" id="youtube-card">
-        <h2>YouTube quick search</h2>
-        <form id="youtube-form" autocomplete="off" novalidate>
-          <label class="field" for="youtube-query">
-            <span>Search term</span>
-            <input id="youtube-query" name="query" type="text" placeholder="e.g. lo-fi beats" required />
-          </label>
-          <label class="field" for="youtube-key">
-            <span>YouTube Data API key</span>
-            <input
-              id="youtube-key"
-              name="key"
-              type="password"
-              placeholder="Paste your key"
-              required
-              autocomplete="off"
-            />
-          </label>
-          <div class="button-row">
-            <button type="submit">Search YouTube</button>
-            <button type="button" id="youtube-clear" class="secondary">Clear results</button>
-          </div>
-        </form>
-        <p class="muted" id="youtube-status">Enter a YouTube Data API key to search.</p>
-        <div id="youtube-results" class="youtube-results" aria-live="polite"></div>
+        <div id="now" aria-live="polite" aria-atomic="true">No track playing yet.</div>
+        <div class="search-form" id="spotify-search-block">
+          <h3>Search Spotify</h3>
+          <form id="spotify-search" autocomplete="off" novalidate>
+            <label class="field" for="spotify-query">
+              <span>Find a track</span>
+              <input id="spotify-query" name="query" type="text" placeholder="Type a song, artist, or album" required />
+            </label>
+            <div class="button-row">
+              <button type="submit">Search</button>
+              <button type="button" id="spotify-clear" class="secondary">Clear results</button>
+            </div>
+          </form>
+          <p class="muted small" id="spotify-search-status">Search for a track to see results.</p>
+          <div id="spotify-results" class="spotify-results" aria-live="polite"></div>
+        </div>
       </section>
     </main>
 
@@ -365,38 +383,70 @@
       import { ensureAuth, getAccessTokenSync } from './auth.js';
       import { initPlayer, startPlayback, pause } from './player.js';
 
-      // Counter setup
-      const counterValueEl = document.getElementById('counter-value');
-      const counterIncBtn = document.getElementById('counter-increment');
-      const counterDecBtn = document.getElementById('counter-decrement');
-      const counterResetBtn = document.getElementById('counter-reset');
-      const COUNTER_STORAGE_KEY = 'pwa_counter';
+      const countdownEls = {
+        days: document.getElementById('countdown-days'),
+        hours: document.getElementById('countdown-hours'),
+        minutes: document.getElementById('countdown-minutes'),
+        seconds: document.getElementById('countdown-seconds')
+      };
+      const countdownStatus = document.getElementById('countdown-status');
 
-      let counter = Number(localStorage.getItem(COUNTER_STORAGE_KEY) || '0');
-      if (!Number.isFinite(counter)) counter = 0;
-
-      function renderCounter(value) {
-        counterValueEl.textContent = value;
-        counterValueEl.dataset.value = value;
+      function getNextDecember19(reference = new Date()) {
+        const year = reference.getFullYear();
+        const target = new Date(year, 11, 19, 0, 0, 0, 0);
+        if (target <= reference) {
+          return new Date(year + 1, 11, 19, 0, 0, 0, 0);
+        }
+        return target;
       }
 
-      function updateCounter(next) {
-        counter = next;
-        renderCounter(counter);
-        localStorage.setItem(COUNTER_STORAGE_KEY, String(counter));
+      let countdownTarget = getNextDecember19();
+      const targetLabel = countdownTarget.toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      function pad(value, digits = 2) {
+        return String(value).padStart(digits, '0');
       }
 
-      renderCounter(counter);
-      counterIncBtn.addEventListener('click', () => updateCounter(counter + 1));
-      counterDecBtn.addEventListener('click', () => updateCounter(counter - 1));
-      counterResetBtn.addEventListener('click', () => updateCounter(0));
+      function updateCountdown() {
+        const now = new Date();
+        const diff = countdownTarget.getTime() - now.getTime();
 
-      // Spotify setup
+        if (diff <= 0) {
+          Object.values(countdownEls).forEach(el => (el.textContent = '00'));
+          countdownStatus.textContent = "It's Nelusik time! Enjoy every moment.";
+          return;
+        }
+
+        const totalSeconds = Math.floor(diff / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        countdownEls.days.textContent = pad(days, Math.max(2, String(days).length));
+        countdownEls.hours.textContent = pad(hours);
+        countdownEls.minutes.textContent = pad(minutes);
+        countdownEls.seconds.textContent = pad(seconds);
+        countdownStatus.textContent = `Counting down to ${targetLabel}.`;
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+
       const spotifyStatus = document.getElementById('spotify-status');
       const loginBtn = document.getElementById('login');
       const playBtn = document.getElementById('play');
       const pauseBtn = document.getElementById('pause');
       const nowPlayingEl = document.getElementById('now');
+      const searchForm = document.getElementById('spotify-search');
+      const searchInput = document.getElementById('spotify-query');
+      const searchStatus = document.getElementById('spotify-search-status');
+      const searchResults = document.getElementById('spotify-results');
+      const clearBtn = document.getElementById('spotify-clear');
 
       let spotifyPlayer = null;
       let spotifyDeviceId = null;
@@ -408,7 +458,7 @@
 
       function formatTrack(state) {
         if (!state || !state.track_window || !state.track_window.current_track) {
-          return 'Nothing playing yet.';
+          return 'No track playing yet.';
         }
         const { current_track: track } = state.track_window;
         const artists = (track.artists || []).map(artist => artist.name).join(', ');
@@ -444,7 +494,7 @@
         }
 
         if (spotifyPlayer) {
-          setSpotifyStatus(`Device ready: ${spotifyDeviceId}`, 'success');
+          setSpotifyStatus('Spotify device ready.', 'success');
           return;
         }
 
@@ -453,7 +503,7 @@
           const { deviceId, player } = await initPlayer(getToken);
           spotifyPlayer = player;
           spotifyDeviceId = deviceId;
-          setSpotifyStatus(`Device ready: ${deviceId}`, 'success');
+          setSpotifyStatus('Spotify device ready.', 'success');
           playBtn.disabled = false;
           pauseBtn.disabled = false;
 
@@ -542,151 +592,142 @@
         await prepareSpotifyPlayer();
       })();
 
-      // YouTube Data API helper
-      const ytForm = document.getElementById('youtube-form');
-      const ytQueryInput = document.getElementById('youtube-query');
-      const ytKeyInput = document.getElementById('youtube-key');
-      const ytClearBtn = document.getElementById('youtube-clear');
-      const ytStatus = document.getElementById('youtube-status');
-      const ytResults = document.getElementById('youtube-results');
-      const YT_KEY_STORAGE = 'yt_api_key';
-
-      const savedKey = localStorage.getItem(YT_KEY_STORAGE);
-      if (savedKey) {
-        ytKeyInput.value = savedKey;
-        ytStatus.textContent = 'API key stored locally for this browser.';
-      }
-
-      ytKeyInput.addEventListener('change', () => {
-        const value = ytKeyInput.value.trim();
-        if (value) {
-          localStorage.setItem(YT_KEY_STORAGE, value);
-          ytStatus.textContent = 'API key saved locally. Ready to search!';
-        } else {
-          localStorage.removeItem(YT_KEY_STORAGE);
-          ytStatus.textContent = 'Enter a YouTube Data API key to search.';
-        }
+      clearBtn.addEventListener('click', () => {
+        searchResults.innerHTML = '';
+        searchInput.value = '';
+        searchStatus.textContent = 'Search for a track to see results.';
+        searchInput.focus();
       });
 
-      ytClearBtn.addEventListener('click', () => {
-        ytResults.innerHTML = '';
-        ytQueryInput.value = '';
-        ytStatus.textContent = ytKeyInput.value.trim()
-          ? 'Cleared results. Enter a search term to try again.'
-          : 'Enter a YouTube Data API key to search.';
-      });
-
-      ytForm.addEventListener('submit', async event => {
+      searchForm.addEventListener('submit', async event => {
         event.preventDefault();
-        const query = ytQueryInput.value.trim();
-        const key = ytKeyInput.value.trim();
-
-        if (!key) {
-          ytStatus.textContent = 'Paste your YouTube Data API key first.';
-          ytKeyInput.focus();
-          return;
-        }
-
-        localStorage.setItem(YT_KEY_STORAGE, key);
+        const query = searchInput.value.trim();
 
         if (!query) {
-          ytStatus.textContent = 'Type something to search for.';
-          ytQueryInput.focus();
+          searchStatus.textContent = 'Type a song, artist, or album to search.';
+          searchInput.focus();
           return;
         }
 
-        ytStatus.textContent = 'Searching YouTube…';
-        ytResults.innerHTML = '';
+        searchStatus.textContent = 'Searching Spotify…';
+        searchResults.innerHTML = '';
+
+        let token;
+        try {
+          token = await getToken();
+          if (!token) {
+            searchStatus.textContent = 'Log in with Spotify, then search again.';
+            loginBtn.focus();
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          searchStatus.textContent = err.message || 'Spotify authorization failed.';
+          return;
+        }
 
         try {
           const params = new URLSearchParams({
-            key,
             q: query,
-            part: 'snippet',
-            type: 'video',
-            maxResults: '6'
+            type: 'track',
+            limit: '8'
           });
-          const res = await fetch(`https://www.googleapis.com/youtube/v3/search?${params.toString()}`);
+          const res = await fetch(`https://api.spotify.com/v1/search?${params.toString()}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
           if (!res.ok) {
             const text = await res.text();
-            throw new Error(text || `YouTube API error (${res.status})`);
+            throw new Error(text || `Spotify search failed (${res.status}).`);
           }
-          const json = await res.json();
-          const items = (json.items || []).filter(item => item.id && item.id.videoId);
-          if (!items.length) {
-            ytStatus.textContent = 'No videos found for that search.';
+          const data = await res.json();
+          const tracks = (data.tracks && data.tracks.items) || [];
+          if (!tracks.length) {
+            searchStatus.textContent = 'No tracks found. Try a different search.';
             return;
           }
-          ytStatus.textContent = `Showing ${items.length} result${items.length === 1 ? '' : 's'}.`;
-          renderYoutubeResults(items);
+
+          renderSpotifyResults(tracks);
+          searchStatus.textContent = `Showing ${tracks.length} track${tracks.length === 1 ? '' : 's'}.`;
         } catch (err) {
           console.error(err);
-          ytStatus.textContent = err.message || 'Unexpected YouTube API error.';
+          searchStatus.textContent = err.message || 'Unexpected Spotify search error.';
         }
       });
 
-      function renderYoutubeResults(items) {
-        ytResults.innerHTML = '';
-        for (const item of items) {
-          const videoId = item.id.videoId;
-          const snippet = item.snippet || {};
-          const title = snippet.title || 'Untitled video';
-          const channelTitle = snippet.channelTitle || 'Unknown channel';
-          const description = snippet.description || '';
-          const thumb = (snippet.thumbnails && (snippet.thumbnails.medium || snippet.thumbnails.high || snippet.thumbnails.default)) || null;
+      function renderSpotifyResults(tracks) {
+        searchResults.innerHTML = '';
 
+        for (const track of tracks) {
           const card = document.createElement('article');
-          card.className = 'yt-card';
+          card.className = 'spotify-track';
 
-          const thumbLink = document.createElement('a');
-          thumbLink.href = `https://www.youtube.com/watch?v=${videoId}`;
-          thumbLink.target = '_blank';
-          thumbLink.rel = 'noopener noreferrer';
-
+          const album = track.album || {};
+          const image = (album.images && (album.images[1] || album.images[0] || album.images[album.images.length - 1])) || null;
           const img = document.createElement('img');
-          img.alt = `Thumbnail for ${title}`;
+          img.alt = album.name ? `${album.name} cover art` : 'Album cover art';
           img.loading = 'lazy';
-          if (thumb) {
-            img.src = thumb.url;
-            if (thumb.width) img.width = thumb.width;
-            if (thumb.height) img.height = thumb.height;
+          if (image) {
+            img.src = image.url;
+            if (image.width) img.width = image.width;
+            if (image.height) img.height = image.height;
           } else {
-            img.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            img.src = 'https://developer.spotify.com/assets/branding-guidelines/icon3@2x.png';
           }
-          thumbLink.appendChild(img);
 
           const meta = document.createElement('div');
-          meta.className = 'yt-meta';
+          meta.className = 'spotify-track-meta';
 
-          const titleLink = document.createElement('a');
-          titleLink.href = thumbLink.href;
-          titleLink.target = '_blank';
-          titleLink.rel = 'noopener noreferrer';
-          titleLink.textContent = title;
+          const title = document.createElement('h3');
+          title.className = 'spotify-track-title';
+          title.textContent = track.name || 'Untitled track';
 
-          const channelEl = document.createElement('p');
-          channelEl.className = 'yt-channel';
-          channelEl.textContent = channelTitle;
+          const artists = (track.artists || []).map(artist => artist.name).join(', ');
+          const albumName = album.name || 'Unknown album';
+          const details = document.createElement('p');
+          details.className = 'spotify-track-details';
+          details.textContent = artists ? `${artists} • ${albumName}` : albumName;
 
-          const dateEl = document.createElement('p');
-          dateEl.className = 'yt-date';
-          if (snippet.publishedAt) {
-            const date = new Date(snippet.publishedAt);
-            if (!Number.isNaN(date.getTime())) {
-              dateEl.textContent = date.toLocaleDateString();
+          const actions = document.createElement('div');
+          actions.className = 'spotify-track-actions';
+
+          const playButton = document.createElement('button');
+          playButton.type = 'button';
+          playButton.textContent = 'Play in PWA';
+          playButton.addEventListener('click', async () => {
+            playButton.disabled = true;
+            try {
+              await prepareSpotifyPlayer();
+              if (!spotifyDeviceId) {
+                throw new Error('Spotify device is not ready.');
+              }
+              setSpotifyStatus(`Playing ${track.name}…`);
+              await startPlayback(spotifyDeviceId, { uris: [track.uri] }, getToken);
+              setSpotifyStatus('Track sent to the Spotify player.', 'success');
+            } catch (err) {
+              console.error(err);
+              setSpotifyStatus(err.message || 'Could not start playback.', 'error');
+            } finally {
+              playButton.disabled = false;
             }
+          });
+
+          const openLink = document.createElement('a');
+          openLink.className = 'link-button';
+          openLink.href = track.external_urls && track.external_urls.spotify ? track.external_urls.spotify : '#';
+          openLink.target = '_blank';
+          openLink.rel = 'noopener noreferrer';
+          openLink.textContent = 'Open in Spotify';
+
+          actions.append(playButton);
+          if (openLink.href !== '#') {
+            actions.append(openLink);
           }
 
-          const descriptionEl = document.createElement('p');
-          descriptionEl.className = 'yt-description';
-          descriptionEl.textContent = description;
-
-          meta.append(titleLink, channelEl);
-          if (dateEl.textContent) meta.appendChild(dateEl);
-          if (descriptionEl.textContent) meta.appendChild(descriptionEl);
-
-          card.append(thumbLink, meta);
-          ytResults.appendChild(card);
+          meta.append(title, details, actions);
+          card.append(img, meta);
+          searchResults.appendChild(card);
         }
       }
     </script>
