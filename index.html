@@ -1,19 +1,379 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Skeleton PWA</title>
+    <title>Nelusik Countdown & Spotify Hub</title>
     <link rel="manifest" href="manifest.webmanifest" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f5f7fb;
+        --bg-gradient: radial-gradient(circle at 15% 20%, rgba(96, 165, 250, 0.2), transparent 55%),
+          radial-gradient(circle at 85% 15%, rgba(244, 114, 182, 0.16), transparent 60%);
+        --text: #0f172a;
+        --muted: #64748b;
+        --card-bg: rgba(255, 255, 255, 0.88);
+        --card-soft: rgba(255, 255, 255, 0.7);
+        --border: rgba(15, 23, 42, 0.12);
+        --accent: #6366f1;
+        --accent-contrast: #ffffff;
+        font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background-color: var(--bg);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #0b1120;
+          --bg-gradient: radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.28), transparent 60%),
+            radial-gradient(circle at 80% 15%, rgba(236, 72, 153, 0.22), transparent 65%);
+          --text: #f8fafc;
+          --muted: #cbd5f5;
+          --card-bg: rgba(15, 23, 42, 0.85);
+          --card-soft: rgba(30, 41, 59, 0.65);
+          --border: rgba(148, 163, 184, 0.24);
+          --accent: #a855f7;
+          --accent-contrast: #0b1120;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg-gradient), var(--bg);
+        color: var(--text);
+      }
+
+      main {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: clamp(3rem, 6vw, 4.5rem) 1.5rem clamp(5rem, 8vw, 6rem);
+        display: grid;
+        gap: clamp(2rem, 4vw, 3rem);
+      }
+
+      header.hero {
+        text-align: center;
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      header.hero h1 {
+        margin: 0;
+        font-size: clamp(2.4rem, 6vw, 3.2rem);
+        letter-spacing: -0.03em;
+      }
+
+      header.hero p {
+        margin: 0 auto;
+        max-width: 46ch;
+        color: var(--muted);
+        font-size: 1.05rem;
+      }
+
+      section.card {
+        background: var(--card-bg);
+        border-radius: 24px;
+        padding: clamp(1.8rem, 4vw, 2.6rem);
+        border: 1px solid var(--border);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, 0.12);
+        display: grid;
+        gap: clamp(1.5rem, 3vw, 2rem);
+        backdrop-filter: blur(18px);
+      }
+
+      section.card h2 {
+        margin: 0;
+        font-size: 1.6rem;
+      }
+
+      .muted {
+        color: var(--muted);
+        margin: 0;
+      }
+
+      .small {
+        font-size: 0.9rem;
+      }
+
+      .countdown-grid {
+        display: grid;
+        gap: clamp(1rem, 2vw, 1.5rem);
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      }
+
+      .countdown-unit {
+        background: var(--card-soft);
+        border-radius: 18px;
+        padding: clamp(1.25rem, 2.5vw, 1.75rem);
+        display: grid;
+        justify-items: center;
+        gap: 0.45rem;
+        border: 1px solid transparent;
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 20px 40px rgba(15, 23, 42, 0.08);
+      }
+
+      .countdown-value {
+        font-size: clamp(2.6rem, 8vw, 3.9rem);
+        font-weight: 700;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: -0.02em;
+      }
+
+      .countdown-label {
+        text-transform: uppercase;
+        letter-spacing: 0.18em;
+        font-size: 0.75rem;
+      }
+
+      #countdown-status {
+        text-align: center;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+      }
+
+      button,
+      input,
+      textarea {
+        font: inherit;
+      }
+
+      button {
+        border-radius: 999px;
+        border: 1px solid transparent;
+        padding: 0.65rem 1.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        background: var(--accent);
+        color: var(--accent-contrast);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+        box-shadow: 0 16px 35px rgba(99, 102, 241, 0.28);
+      }
+
+      button:hover:not(:disabled) {
+        transform: translateY(-1px);
+        filter: brightness(1.06);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+        filter: saturate(0.6);
+      }
+
+      button.secondary {
+        background: transparent;
+        color: var(--text);
+        border-color: var(--border);
+        box-shadow: none;
+      }
+
+      button.secondary:hover:not(:disabled) {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      label.field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
+      label.field span {
+        font-weight: 600;
+        font-size: 0.95rem;
+      }
+
+      input[type='text'] {
+        border-radius: 14px;
+        border: 1px solid var(--border);
+        padding: 0.85rem 1rem;
+        background: var(--card-soft);
+        color: inherit;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      input[type='text']:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.28);
+      }
+
+      #now {
+        min-height: 1.25rem;
+        font-weight: 500;
+      }
+
+      .spotify-status[data-tone='error'] {
+        color: #dc2626;
+      }
+
+      .spotify-status[data-tone='success'] {
+        color: #15803d;
+      }
+
+      .search-form {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .spotify-results {
+        display: grid;
+        gap: 1rem;
+      }
+
+      .spotify-track {
+        display: grid;
+        grid-template-columns: minmax(96px, 120px) 1fr;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        background: var(--card-soft);
+        border-radius: 18px;
+        border: 1px solid rgba(99, 102, 241, 0.08);
+      }
+
+      .spotify-track img {
+        width: 100%;
+        border-radius: 14px;
+        display: block;
+      }
+
+      .spotify-track-meta {
+        display: grid;
+        gap: 0.5rem;
+        align-content: start;
+      }
+
+      .spotify-track-title {
+        margin: 0;
+        font-size: 1.05rem;
+      }
+
+      .spotify-track-details {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .spotify-track-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+      }
+
+      a.link-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 999px;
+        padding: 0.6rem 1.3rem;
+        font-weight: 600;
+        text-decoration: none;
+        border: 1px solid var(--border);
+        color: var(--text);
+        transition: border-color 0.2s ease, color 0.2s ease;
+      }
+
+      a.link-button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      @media (max-width: 720px) {
+        .spotify-track {
+          grid-template-columns: 1fr;
+        }
+
+        .spotify-track img {
+          max-width: 220px;
+          justify-self: center;
+        }
+      }
+
+      @media (max-width: 580px) {
+        .button-row {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
+    </style>
   </head>
   <body>
     <main>
-      <h1>Skeleton PWA</h1>
-      <p id="status">Deployed? Next step is Spotify auth.</p>
-      <button id="login">Log in with Spotify</button>
-      <button id="play" disabled>Play sample</button>
-      <button id="pause" disabled>Pause</button>
-      <div id="now"></div>
+      <header class="hero">
+        <h1>Until I see Nelusik</h1>
+        <p>
+          Count down the moments until December 19 and queue the perfect soundtrack with Spotify search and playback.
+        </p>
+      </header>
+
+      <section class="card" id="countdown-card">
+        <h2>Precise countdown</h2>
+        <p class="muted">Every second brings December 19 closer.</p>
+        <div class="countdown-grid" role="group" aria-label="Countdown to December 19">
+          <article class="countdown-unit">
+            <span class="countdown-value" id="countdown-days">00</span>
+            <span class="countdown-label">Days</span>
+          </article>
+          <article class="countdown-unit">
+            <span class="countdown-value" id="countdown-hours">00</span>
+            <span class="countdown-label">Hours</span>
+          </article>
+          <article class="countdown-unit">
+            <span class="countdown-value" id="countdown-minutes">00</span>
+            <span class="countdown-label">Minutes</span>
+          </article>
+          <article class="countdown-unit">
+            <span class="countdown-value" id="countdown-seconds">00</span>
+            <span class="countdown-label">Seconds</span>
+          </article>
+        </div>
+        <p id="countdown-status" class="muted small"></p>
+      </section>
+
+      <section class="card" id="spotify-card">
+        <h2>Spotify player &amp; search</h2>
+        <p class="muted">
+          Log in with Spotify Premium to control playback directly in the browser, or search for the right song and start it
+          instantly.
+        </p>
+        <p class="muted small spotify-status" id="spotify-status">Waiting for Spotify SDK…</p>
+        <div class="button-row">
+          <button id="login" type="button">Log in with Spotify</button>
+          <button id="play" type="button" disabled>Play sample</button>
+          <button id="pause" type="button" disabled class="secondary">Pause</button>
+        </div>
+        <div id="now" aria-live="polite" aria-atomic="true">No track playing yet.</div>
+        <div class="search-form" id="spotify-search-block">
+          <h3>Search Spotify</h3>
+          <form id="spotify-search" autocomplete="off" novalidate>
+            <label class="field" for="spotify-query">
+              <span>Find a track</span>
+              <input id="spotify-query" name="query" type="text" placeholder="Type a song, artist, or album" required />
+            </label>
+            <div class="button-row">
+              <button type="submit">Search</button>
+              <button type="button" id="spotify-clear" class="secondary">Clear results</button>
+            </div>
+          </form>
+          <p class="muted small" id="spotify-search-status">Search for a track to see results.</p>
+          <div id="spotify-results" class="spotify-results" aria-live="polite"></div>
+        </div>
+      </section>
     </main>
 
     <!-- Spotify Web Playback SDK -->
@@ -23,32 +383,353 @@
       import { ensureAuth, getAccessTokenSync } from './auth.js';
       import { initPlayer, startPlayback, pause } from './player.js';
 
-      const status = document.getElementById('status');
+      const countdownEls = {
+        days: document.getElementById('countdown-days'),
+        hours: document.getElementById('countdown-hours'),
+        minutes: document.getElementById('countdown-minutes'),
+        seconds: document.getElementById('countdown-seconds')
+      };
+      const countdownStatus = document.getElementById('countdown-status');
+
+      function getNextDecember19(reference = new Date()) {
+        const year = reference.getFullYear();
+        const target = new Date(year, 11, 19, 0, 0, 0, 0);
+        if (target <= reference) {
+          return new Date(year + 1, 11, 19, 0, 0, 0, 0);
+        }
+        return target;
+      }
+
+      let countdownTarget = getNextDecember19();
+      const targetLabel = countdownTarget.toLocaleDateString(undefined, {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+
+      function pad(value, digits = 2) {
+        return String(value).padStart(digits, '0');
+      }
+
+      function updateCountdown() {
+        const now = new Date();
+        const diff = countdownTarget.getTime() - now.getTime();
+
+        if (diff <= 0) {
+          Object.values(countdownEls).forEach(el => (el.textContent = '00'));
+          countdownStatus.textContent = "It's Nelusik time! Enjoy every moment.";
+          return;
+        }
+
+        const totalSeconds = Math.floor(diff / 1000);
+        const days = Math.floor(totalSeconds / 86400);
+        const hours = Math.floor((totalSeconds % 86400) / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        countdownEls.days.textContent = pad(days, Math.max(2, String(days).length));
+        countdownEls.hours.textContent = pad(hours);
+        countdownEls.minutes.textContent = pad(minutes);
+        countdownEls.seconds.textContent = pad(seconds);
+        countdownStatus.textContent = `Counting down to ${targetLabel}.`;
+      }
+
+      updateCountdown();
+      setInterval(updateCountdown, 1000);
+
+      const spotifyStatus = document.getElementById('spotify-status');
       const loginBtn = document.getElementById('login');
       const playBtn = document.getElementById('play');
       const pauseBtn = document.getElementById('pause');
+      const nowPlayingEl = document.getElementById('now');
+      const searchForm = document.getElementById('spotify-search');
+      const searchInput = document.getElementById('spotify-query');
+      const searchStatus = document.getElementById('spotify-search-status');
+      const searchResults = document.getElementById('spotify-results');
+      const clearBtn = document.getElementById('spotify-clear');
 
-      loginBtn.onclick = async () => { await ensureAuth(); };
+      let spotifyPlayer = null;
+      let spotifyDeviceId = null;
 
-      window.onSpotifyWebPlaybackSDKReady = async () => {
-        const token = getAccessTokenSync();
-        if (!token) {
-          status.textContent = 'Click “Log in with Spotify” first.';
+      function setSpotifyStatus(message, tone = 'info') {
+        spotifyStatus.textContent = message;
+        spotifyStatus.dataset.tone = tone;
+      }
+
+      function formatTrack(state) {
+        if (!state || !state.track_window || !state.track_window.current_track) {
+          return 'No track playing yet.';
+        }
+        const { current_track: track } = state.track_window;
+        const artists = (track.artists || []).map(artist => artist.name).join(', ');
+        return artists ? `${track.name} — ${artists}` : track.name;
+      }
+
+      const getToken = async () => {
+        let token = getAccessTokenSync();
+        if (token) return token;
+        await ensureAuth({ interactive: false });
+        token = getAccessTokenSync();
+        return token;
+      };
+
+      async function prepareSpotifyPlayer() {
+        try {
+          const token = await getToken();
+          if (!token) {
+            setSpotifyStatus('Log in with Spotify to enable playback.');
+            playBtn.disabled = true;
+            pauseBtn.disabled = true;
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          setSpotifyStatus(err.message || 'Spotify authorization failed.', 'error');
           return;
         }
-        status.textContent = 'Initializing player…';
 
-        const { deviceId, player } = await initPlayer(() => getAccessTokenSync());
-        status.textContent = `Device ready: ${deviceId}`;
+        if (!window.Spotify || !window.Spotify.Player) {
+          setSpotifyStatus('Waiting for Spotify SDK…');
+          return;
+        }
 
-        playBtn.disabled = false;
-        pauseBtn.disabled = false;
+        if (spotifyPlayer) {
+          setSpotifyStatus('Spotify device ready.', 'success');
+          return;
+        }
 
-        // Must be triggered by a user gesture
-        playBtn.onclick = () =>
-          startPlayback(deviceId, { uris: ['spotify:track:3n3Ppam7vgaVa1iaRUc9Lp'] }); // example
-        pauseBtn.onclick = () => pause(player);
+        setSpotifyStatus('Initializing Spotify player…');
+        try {
+          const { deviceId, player } = await initPlayer(getToken);
+          spotifyPlayer = player;
+          spotifyDeviceId = deviceId;
+          setSpotifyStatus('Spotify device ready.', 'success');
+          playBtn.disabled = false;
+          pauseBtn.disabled = false;
+
+          player.addListener('player_state_changed', state => {
+            nowPlayingEl.textContent = formatTrack(state);
+          });
+
+          player.addListener('initialization_error', ({ message }) => {
+            setSpotifyStatus(`Spotify init error: ${message}`, 'error');
+          });
+          player.addListener('authentication_error', ({ message }) => {
+            setSpotifyStatus(`Spotify auth error: ${message}`, 'error');
+          });
+          player.addListener('account_error', ({ message }) => {
+            setSpotifyStatus(`Spotify account error: ${message}`, 'error');
+          });
+          player.addListener('playback_error', ({ message }) => {
+            setSpotifyStatus(`Spotify playback error: ${message}`, 'error');
+          });
+          player.addListener('not_ready', ({ device_id }) => {
+            if (device_id === spotifyDeviceId) {
+              setSpotifyStatus('Spotify device went offline. Reload to reconnect.', 'error');
+              playBtn.disabled = true;
+              pauseBtn.disabled = true;
+            }
+          });
+
+          playBtn.onclick = async () => {
+            playBtn.disabled = true;
+            try {
+              setSpotifyStatus('Attempting to play the sample track…');
+              await startPlayback(deviceId, { uris: ['spotify:track:3n3Ppam7vgaVa1iaRUc9Lp'] }, getToken);
+              setSpotifyStatus('Sample track sent to the Spotify player.', 'success');
+            } catch (err) {
+              console.error(err);
+              setSpotifyStatus(err.message || 'Playback failed.', 'error');
+            } finally {
+              playBtn.disabled = false;
+            }
+          };
+
+          pauseBtn.onclick = async () => {
+            pauseBtn.disabled = true;
+            try {
+              await pause(player);
+              setSpotifyStatus('Playback paused.');
+            } catch (err) {
+              setSpotifyStatus(err.message || 'Unable to pause playback.', 'error');
+            } finally {
+              pauseBtn.disabled = false;
+            }
+          };
+        } catch (err) {
+          console.error(err);
+          setSpotifyStatus(err.message || 'Failed to initialise Spotify player.', 'error');
+        }
+      }
+
+      loginBtn.addEventListener('click', async () => {
+        loginBtn.disabled = true;
+        try {
+          setSpotifyStatus('Opening Spotify login…');
+          const token = await ensureAuth();
+          if (token) {
+            await prepareSpotifyPlayer();
+          }
+        } catch (err) {
+          console.error(err);
+          setSpotifyStatus(err.message || 'Spotify login failed.', 'error');
+        } finally {
+          loginBtn.disabled = false;
+        }
+      });
+
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        prepareSpotifyPlayer();
       };
+
+      (async () => {
+        try {
+          await ensureAuth({ interactive: false });
+        } catch (err) {
+          console.error(err);
+          setSpotifyStatus(err.message || 'Spotify auth error.', 'error');
+        }
+        await prepareSpotifyPlayer();
+      })();
+
+      clearBtn.addEventListener('click', () => {
+        searchResults.innerHTML = '';
+        searchInput.value = '';
+        searchStatus.textContent = 'Search for a track to see results.';
+        searchInput.focus();
+      });
+
+      searchForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const query = searchInput.value.trim();
+
+        if (!query) {
+          searchStatus.textContent = 'Type a song, artist, or album to search.';
+          searchInput.focus();
+          return;
+        }
+
+        searchStatus.textContent = 'Searching Spotify…';
+        searchResults.innerHTML = '';
+
+        let token;
+        try {
+          token = await getToken();
+          if (!token) {
+            searchStatus.textContent = 'Log in with Spotify, then search again.';
+            loginBtn.focus();
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          searchStatus.textContent = err.message || 'Spotify authorization failed.';
+          return;
+        }
+
+        try {
+          const params = new URLSearchParams({
+            q: query,
+            type: 'track',
+            limit: '8'
+          });
+          const res = await fetch(`https://api.spotify.com/v1/search?${params.toString()}`, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          });
+          if (!res.ok) {
+            const text = await res.text();
+            throw new Error(text || `Spotify search failed (${res.status}).`);
+          }
+          const data = await res.json();
+          const tracks = (data.tracks && data.tracks.items) || [];
+          if (!tracks.length) {
+            searchStatus.textContent = 'No tracks found. Try a different search.';
+            return;
+          }
+
+          renderSpotifyResults(tracks);
+          searchStatus.textContent = `Showing ${tracks.length} track${tracks.length === 1 ? '' : 's'}.`;
+        } catch (err) {
+          console.error(err);
+          searchStatus.textContent = err.message || 'Unexpected Spotify search error.';
+        }
+      });
+
+      function renderSpotifyResults(tracks) {
+        searchResults.innerHTML = '';
+
+        for (const track of tracks) {
+          const card = document.createElement('article');
+          card.className = 'spotify-track';
+
+          const album = track.album || {};
+          const image = (album.images && (album.images[1] || album.images[0] || album.images[album.images.length - 1])) || null;
+          const img = document.createElement('img');
+          img.alt = album.name ? `${album.name} cover art` : 'Album cover art';
+          img.loading = 'lazy';
+          if (image) {
+            img.src = image.url;
+            if (image.width) img.width = image.width;
+            if (image.height) img.height = image.height;
+          } else {
+            img.src = 'https://developer.spotify.com/assets/branding-guidelines/icon3@2x.png';
+          }
+
+          const meta = document.createElement('div');
+          meta.className = 'spotify-track-meta';
+
+          const title = document.createElement('h3');
+          title.className = 'spotify-track-title';
+          title.textContent = track.name || 'Untitled track';
+
+          const artists = (track.artists || []).map(artist => artist.name).join(', ');
+          const albumName = album.name || 'Unknown album';
+          const details = document.createElement('p');
+          details.className = 'spotify-track-details';
+          details.textContent = artists ? `${artists} • ${albumName}` : albumName;
+
+          const actions = document.createElement('div');
+          actions.className = 'spotify-track-actions';
+
+          const playButton = document.createElement('button');
+          playButton.type = 'button';
+          playButton.textContent = 'Play in PWA';
+          playButton.addEventListener('click', async () => {
+            playButton.disabled = true;
+            try {
+              await prepareSpotifyPlayer();
+              if (!spotifyDeviceId) {
+                throw new Error('Spotify device is not ready.');
+              }
+              setSpotifyStatus(`Playing ${track.name}…`);
+              await startPlayback(spotifyDeviceId, { uris: [track.uri] }, getToken);
+              setSpotifyStatus('Track sent to the Spotify player.', 'success');
+            } catch (err) {
+              console.error(err);
+              setSpotifyStatus(err.message || 'Could not start playback.', 'error');
+            } finally {
+              playButton.disabled = false;
+            }
+          });
+
+          const openLink = document.createElement('a');
+          openLink.className = 'link-button';
+          openLink.href = track.external_urls && track.external_urls.spotify ? track.external_urls.spotify : '#';
+          openLink.target = '_blank';
+          openLink.rel = 'noopener noreferrer';
+          openLink.textContent = 'Open in Spotify';
+
+          actions.append(playButton);
+          if (openLink.href !== '#') {
+            actions.append(openLink);
+          }
+
+          meta.append(title, details, actions);
+          card.append(img, meta);
+          searchResults.appendChild(card);
+        }
+      }
     </script>
   </body>
 </html>
