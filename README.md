@@ -26,7 +26,14 @@ A modern, single-page progressive web app that keeps the anticipation for Decemb
 3. The Nelusik deployment already ships with Client ID `1bc3566e5b8f4ae1bbaafec8950f4c86` in `auth.js`. If you spin up your own Spotify
    application, swap that value for your Client ID before redeploying.
 4. Redeploy. When you open the app, click **Log in with Spotify** and approve the scopes. Playback features require a Spotify Premium account.
-5. Use the search bar to trigger playback on your Web Playback device.
+5. After Spotify redirects you back, the page finishes the login automatically and the **Spotify player** status pill changes to "Connected".
+6. Use the search bar to trigger playback on your Web Playback device.
+
+### Troubleshooting Spotify playback
+- Premium is mandatory for the Web Playback SDK; free accounts can search but cannot play inside the browser.
+- If the status pill stays on "Offline", click **Log in with Spotify** once more so the page can finish storing your token (no code copy/paste required).
+- When you tap **Play track** the app now reports precise errors—follow the on-screen hint if it says your session expired or no device is active.
+- Spotify sometimes needs an active device: open the Spotify app on your phone or desktop so the browser can hand off playback to that device.
 
 ## Enable YouTube search (optional)
 1. Create a [YouTube Data API v3](https://console.cloud.google.com/apis/api/youtube.googleapis.com/) key and restrict it to the deployed origin (HTTP referrer restriction recommended).

@@ -1646,6 +1646,7 @@
       let spotifyPlayer = null;
       let spotifyDeviceId = null;
       let progressInterval = null;
+      let spotifySdkReady = false;
 
       function setSpotifyConnection(state, text) {
         spotifyConnection.dataset.state = state;
@@ -1706,7 +1707,16 @@
 
       spotifyLoginBtn.addEventListener('click', async () => {
         setSpotifyStatus('opening login window');
-        await ensureAuth();
+        try {
+          await ensureAuth();
+          setSpotifyStatus('checking session');
+          await connectSpotifyPlayer();
+        } catch (error) {
+          console.error(error);
+          setSpotifyStatus('login failed');
+          setSpotifyConnection('error', 'Error');
+          enableSpotifyControls(false);
+        }
       });
 
       function updateTrackProgress(state) {
@@ -1814,11 +1824,11 @@
                 return;
               }
               try {
-                await startPlayback(spotifyDeviceId, { uris: [track.uri] });
+                await startPlayback(spotifyDeviceId, { uris: [track.uri] }, () => getAccessTokenSync());
                 setSpotifyStatus(`starting ${track.name}`);
               } catch (error) {
                 console.error(error);
-                setSpotifyStatus('unable to start playback');
+                setSpotifyStatus(error.message || 'unable to start playback');
               }
             });
             card.append(img, info, playButton);
@@ -1867,12 +1877,20 @@
 
       bindPlayerControls();
 
-      window.onSpotifyWebPlaybackSDKReady = async () => {
+      async function connectSpotifyPlayer() {
         const token = getAccessTokenSync();
         if (!token) {
+          setSpotifyConnection('offline', 'Offline');
           setSpotifyStatus('click “Log in with Spotify”');
+          enableSpotifyControls(false);
           return;
         }
+        if (!spotifySdkReady) {
+          setSpotifyStatus('loading Spotify SDK…');
+          return;
+        }
+        if (spotifyPlayer) return;
+
         setSpotifyConnection('connecting', 'Connecting…');
         setSpotifyStatus('initializing device');
         try {
@@ -1901,7 +1919,30 @@
           spotifyDeviceId = null;
           spotifyPlayer = null;
         }
+      }
+
+      window.onSpotifyWebPlaybackSDKReady = async () => {
+        spotifySdkReady = true;
+        await connectSpotifyPlayer();
       };
+
+      (async () => {
+        const params = new URLSearchParams(location.search);
+        if (params.has('code')) {
+          setSpotifyStatus('finishing login…');
+          try {
+            await ensureAuth();
+            setSpotifyStatus('checking session');
+          } catch (error) {
+            console.error(error);
+            setSpotifyStatus('login failed');
+            setSpotifyConnection('error', 'Error');
+            enableSpotifyControls(false);
+            return;
+          }
+        }
+        await connectSpotifyPlayer();
+      })();
 
       // YouTube integration
       const youtubeKeyInput = document.getElementById('youtube-key');

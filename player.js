@@ -16,15 +16,34 @@ export async function initPlayer(getTokenSync) {
   });
 }
 
-export async function startPlayback(deviceId, body) {
-  await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`, {
+export async function startPlayback(deviceId, body, getTokenSync) {
+  const token = typeof getTokenSync === 'function' ? getTokenSync() : localStorage.getItem('sp_access');
+  if (!token) {
+    throw new Error('Missing Spotify session. Click “Log in with Spotify”.');
+  }
+
+  const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`, {
     method: 'PUT',
     headers: {
-      'Authorization': `Bearer ${localStorage.getItem('sp_access')}`,
+      'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify(body)
   });
+
+  if (res.status === 401) {
+    throw new Error('Spotify session expired. Click “Log in with Spotify” again.');
+  }
+  if (res.status === 403) {
+    throw new Error('Spotify Premium is required for playback.');
+  }
+  if (res.status === 404) {
+    throw new Error('No active Spotify device. Open Spotify on any device, then try again.');
+  }
+  if (!res.ok) {
+    const message = await res.text().catch(() => '');
+    throw new Error(message || `Spotify playback failed (${res.status}).`);
+  }
 }
 
 export function pause(player) { player.pause(); }
