@@ -1,54 +1,227 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Skeleton PWA</title>
-    <link rel="manifest" href="manifest.webmanifest" />
-  </head>
-  <body>
-    <main>
-      <h1>Skeleton PWA</h1>
-      <p id="status">Deployed? Next step is Spotify auth.</p>
-      <button id="login">Log in with Spotify</button>
-      <button id="play" disabled>Play sample</button>
-      <button id="pause" disabled>Pause</button>
-      <div id="now"></div>
-    </main>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Days till I see Nelusik</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Orbitron:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="background-gradient"></div>
+  <header class="hero">
+    <canvas id="particle-canvas" aria-hidden="true"></canvas>
+    <div class="hero-content">
+      <span class="hero-greeting">Hi Vivien.</span>
+      <h1 class="hero-title">Days till I see Nelusik</h1>
+      <div class="hero-countdown" aria-live="polite">
+        <div class="flip-card" data-unit="days" aria-label="Days remaining">
+          <div class="flip-card__top">00</div>
+          <div class="flip-card__bottom">00</div>
+          <div class="flip-card__flip">
+            <span class="flip-card__front">00</span>
+            <span class="flip-card__back">00</span>
+          </div>
+          <span class="flip-card__label">Days</span>
+        </div>
+        <div class="flip-card" data-unit="hours" aria-label="Hours remaining">
+          <div class="flip-card__top">00</div>
+          <div class="flip-card__bottom">00</div>
+          <div class="flip-card__flip">
+            <span class="flip-card__front">00</span>
+            <span class="flip-card__back">00</span>
+          </div>
+          <span class="flip-card__label">Hours</span>
+        </div>
+        <div class="flip-card" data-unit="minutes" aria-label="Minutes remaining">
+          <div class="flip-card__top">00</div>
+          <div class="flip-card__bottom">00</div>
+          <div class="flip-card__flip">
+            <span class="flip-card__front">00</span>
+            <span class="flip-card__back">00</span>
+          </div>
+          <span class="flip-card__label">Minutes</span>
+        </div>
+        <div class="flip-card" data-unit="seconds" aria-label="Seconds remaining">
+          <div class="flip-card__top">00</div>
+          <div class="flip-card__bottom">00</div>
+          <div class="flip-card__flip">
+            <span class="flip-card__front">00</span>
+            <span class="flip-card__back">00</span>
+          </div>
+          <span class="flip-card__label">Seconds</span>
+        </div>
+      </div>
+      <p id="countdown-detail" class="hero-description">Tracking the time until you see Nelusik again.</p>
+    </div>
+  </header>
 
-    <!-- Spotify Web Playback SDK -->
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+  <nav class="tab-nav" aria-label="Primary">
+    <button id="tab-countdown" class="tab-nav__item is-active" data-tab="countdown" aria-controls="countdown-panel" aria-selected="true">Countdown</button>
+    <button id="tab-spotify" class="tab-nav__item" data-tab="spotify" aria-controls="spotify-panel" aria-selected="false">Spotify Player</button>
+    <button id="tab-youtube" class="tab-nav__item" data-tab="youtube" aria-controls="youtube-panel" aria-selected="false">YouTube Search</button>
+  </nav>
 
-    <script type="module">
-      import { ensureAuth, getAccessTokenSync } from './auth.js';
-      import { initPlayer, startPlayback, pause } from './player.js';
+  <main class="main">
+    <section id="countdown-panel" class="tab-panel is-active" role="tabpanel" aria-labelledby="tab-countdown">
+      <div class="countdown-grid">
+        <article class="panel-card">
+          <h2>Time until reunion</h2>
+          <p class="panel-card__summary">A lovingly precise countdown with flip animations and ambient particles to keep the excitement alive.</p>
+          <div class="progress">
+            <div class="progress__label">Progress toward reunion</div>
+            <div class="progress__bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <span class="progress__fill" style="width: 0%"></span>
+            </div>
+            <div class="progress__meta">
+              <span id="progress-percent">0% complete</span>
+              <span id="progress-elapsed">Waiting just began</span>
+            </div>
+          </div>
+        </article>
+        <article class="panel-card">
+          <h2>Live breakdown</h2>
+          <ul class="breakdown" id="countdown-breakdown">
+            <li><span class="breakdown__label">Days</span><span class="breakdown__value">0</span></li>
+            <li><span class="breakdown__label">Hours</span><span class="breakdown__value">0</span></li>
+            <li><span class="breakdown__label">Minutes</span><span class="breakdown__value">0</span></li>
+            <li><span class="breakdown__label">Seconds</span><span class="breakdown__value">0</span></li>
+          </ul>
+          <p class="panel-card__note">Numbers update in real time. Flip animations kick in only when values change.</p>
+        </article>
+      </div>
+    </section>
 
-      const status = document.getElementById('status');
-      const loginBtn = document.getElementById('login');
-      const playBtn = document.getElementById('play');
-      const pauseBtn = document.getElementById('pause');
+    <section id="spotify-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-spotify" hidden>
+      <div class="tab-heading">
+        <h2>Spotify Player</h2>
+        <div class="status-pill" id="spotify-status" data-status="ready">Ready</div>
+      </div>
+      <p class="tab-description">Load any Spotify playlist, track, or album instantly. No OAuth flow is required—everything stays securely on this device.</p>
 
-      loginBtn.onclick = async () => { await ensureAuth(); };
+      <section class="panel-card">
+        <header class="panel-card__header">
+          <h3>Load something you love</h3>
+        </header>
+        <form class="input-grid" id="spotify-link-form">
+          <label for="spotify-link" class="input-group">
+            <span class="input-group__label">Spotify link</span>
+            <div class="input-group__field">
+              <input type="url" id="spotify-link" name="spotify-link" autocomplete="off" placeholder="https://open.spotify.com/..." required />
+            </div>
+          </label>
+          <button class="btn" type="submit">Play</button>
+        </form>
+        <p class="panel-card__note">Works with tracks, playlists, albums, artists, and podcasts. We embed the official Spotify player, so playback stays in Spotify’s ecosystem.</p>
+        <div class="status-message" id="spotify-message" role="status" aria-live="polite"></div>
+      </section>
 
-      window.onSpotifyWebPlaybackSDKReady = async () => {
-        const token = getAccessTokenSync();
-        if (!token) {
-          status.textContent = 'Click “Log in with Spotify” first.';
-          return;
-        }
-        status.textContent = 'Initializing player…';
+      <div class="spotify-grid">
+        <section class="panel-card spotify-card">
+          <header class="panel-card__header">
+            <h3>Currently playing</h3>
+          </header>
+          <div class="spotify-embed" id="spotify-embed">
+            <div class="embed-placeholder">
+              <p>Select a suggestion or paste a Spotify link to start listening.</p>
+            </div>
+          </div>
+          <div class="embed-meta" id="spotify-embed-meta"></div>
+        </section>
 
-        const { deviceId, player } = await initPlayer(() => getAccessTokenSync());
-        status.textContent = `Device ready: ${deviceId}`;
+        <section class="panel-card spotify-card">
+          <header class="panel-card__header">
+            <h3>Curated picks</h3>
+          </header>
+          <form class="search" id="spotify-search-form">
+            <label for="spotify-search" class="sr-only">Search curated picks</label>
+            <input type="search" id="spotify-search" placeholder="Search these vibes" autocomplete="off" />
+          </form>
+          <div class="search-results" id="spotify-results" aria-live="polite"></div>
+        </section>
 
-        playBtn.disabled = false;
-        pauseBtn.disabled = false;
+        <section class="panel-card spotify-card">
+          <header class="panel-card__header">
+            <h3>Recent sessions</h3>
+          </header>
+          <ul class="recent" id="spotify-recent"></ul>
+        </section>
+      </div>
+    </section>
 
-        // Must be triggered by a user gesture
-        playBtn.onclick = () =>
-          startPlayback(deviceId, { uris: ['spotify:track:3n3Ppam7vgaVa1iaRUc9Lp'] }); // example
-        pauseBtn.onclick = () => pause(player);
-      };
-    </script>
-  </body>
+    <section id="youtube-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-youtube" hidden>
+      <div class="security-banner">
+        <strong>Security notice:</strong> Your YouTube API key stays in your browser storage and is never sent anywhere except Google.
+      </div>
+      <section class="panel-card">
+        <header class="panel-card__header">
+          <h3>Connect your YouTube API</h3>
+        </header>
+        <div class="input-grid">
+          <label for="youtube-key" class="input-group">
+            <span class="input-group__label">API key</span>
+            <div class="input-group__field">
+              <input type="password" id="youtube-key" placeholder="Enter YouTube Data API v3 key" autocomplete="off" />
+              <button type="button" class="input-group__toggle" id="youtube-key-toggle" aria-label="Show key">Show</button>
+            </div>
+          </label>
+          <button class="btn" id="youtube-connect">Connect</button>
+        </div>
+        <p class="panel-card__note">We support the YouTube Data API v3 for search results and the YouTube Player API for playback.</p>
+        <div class="status-message" id="youtube-message" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel-card" id="youtube-connected" hidden>
+        <header class="panel-card__header">
+          <h3>Search YouTube</h3>
+        </header>
+        <form class="search" id="youtube-search-form">
+          <label for="youtube-search" class="sr-only">Search YouTube</label>
+          <input type="search" id="youtube-search" placeholder="Type to search videos" autocomplete="off" list="youtube-suggestions" />
+          <datalist id="youtube-suggestions"></datalist>
+          <button class="btn btn--small" type="submit">Search</button>
+        </form>
+        <div class="search-meta" id="youtube-search-meta"></div>
+        <div class="youtube-grid">
+          <div class="video-results" id="youtube-results" aria-live="polite">
+            <div class="skeleton skeleton--tile"></div>
+            <div class="skeleton skeleton--tile"></div>
+            <div class="skeleton skeleton--tile"></div>
+          </div>
+          <div class="video-player" id="youtube-player-wrapper">
+            <div id="youtube-player" class="player-frame" aria-label="YouTube video player"></div>
+            <div class="player-details" id="youtube-player-details"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel-card" id="youtube-history-card" hidden>
+        <header class="panel-card__header">
+          <h3>View history</h3>
+        </header>
+        <ul class="history" id="youtube-history"></ul>
+      </section>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer__links">
+      <a href="#" class="footer__link">Privacy policy</a>
+      <a href="#" class="footer__link">Contact</a>
+      <a href="#" class="footer__link">Social</a>
+    </div>
+    <div class="footer__status">
+      <span>Spotify API: <span id="footer-spotify-status">Offline</span></span>
+      <span>YouTube API: <span id="footer-youtube-status">Offline</span></span>
+    </div>
+    <div class="footer__meta">
+      <span id="footer-timestamp">Last updated: --</span>
+    </div>
+  </footer>
+
+  <script src="https://www.youtube.com/iframe_api" async></script>
+  <script src="app.js" type="module"></script>
+</body>
 </html>
