@@ -1,6 +1,44 @@
 const COUNTDOWN_TARGET = new Date('2025-02-14T18:00:00Z');
 const COUNTDOWN_START = new Date('2024-09-01T00:00:00Z');
-const SPOTIFY_CLIENT_ID = '1bc3566e5b8f4ae1bbaafec8950f4c86';
+
+const SPOTIFY_CURATED = [
+  {
+    title: 'Chill Hits',
+    subtitle: 'Feel-good pop and indie to soundtrack a cozy evening.',
+    url: 'https://open.spotify.com/playlist/37i9dQZF1DX4WYpdgoIcn6',
+    accent: 'rgba(74, 214, 184, 0.55)',
+  },
+  {
+    title: 'Lofi Beats',
+    subtitle: 'Steady beats to help you unwind and focus.',
+    url: 'https://open.spotify.com/playlist/37i9dQZF1DX2UXfvE4VhLZ',
+    accent: 'rgba(96, 165, 250, 0.55)',
+  },
+  {
+    title: 'Deep Focus',
+    subtitle: 'Ambient and post-rock textures for deep work.',
+    url: 'https://open.spotify.com/playlist/37i9dQZF1DWZeKCadgRdKQ',
+    accent: 'rgba(165, 180, 252, 0.55)',
+  },
+  {
+    title: 'Peaceful Piano',
+    subtitle: 'Gentle piano to keep things calm and centered.',
+    url: 'https://open.spotify.com/playlist/37i9dQZF1DX4sWSpwq3LiO',
+    accent: 'rgba(255, 255, 255, 0.45)',
+  },
+  {
+    title: 'Blinding Lights',
+    subtitle: 'The Weeknd • Dawn FM',
+    url: 'https://open.spotify.com/track/0VjIjW4GlUZAMYd2vXMi3b',
+    accent: 'rgba(255, 149, 128, 0.55)',
+  },
+  {
+    title: 'As It Was',
+    subtitle: 'Harry Styles • Harry’s House',
+    url: 'https://open.spotify.com/track/4LRPiXqCikLlN15c3yImP7',
+    accent: 'rgba(255, 212, 130, 0.55)',
+  },
+];
 
 const selectors = {
   tabButtons: document.querySelectorAll('.tab-nav__item'),
@@ -15,21 +53,14 @@ const selectors = {
   footerTimestamp: document.querySelector('#footer-timestamp'),
   spotifyStatus: document.querySelector('#spotify-status'),
   spotifyMessage: document.querySelector('#spotify-message'),
-  spotifyTokenInput: document.querySelector('#spotify-token'),
-  spotifyToggle: document.querySelector('#spotify-token-toggle'),
-  spotifyConnect: document.querySelector('#spotify-connect'),
-  spotifyStartAuth: document.querySelector('#spotify-start-auth'),
-  spotifyRefresh: document.querySelector('#spotify-refresh'),
-  spotifyResults: document.querySelector('#spotify-results'),
-  spotifyNowPlaying: document.querySelector('#spotify-now-playing'),
-  spotifyRecent: document.querySelector('#spotify-recent'),
+  spotifyLinkForm: document.querySelector('#spotify-link-form'),
+  spotifyLinkInput: document.querySelector('#spotify-link'),
+  spotifyEmbed: document.querySelector('#spotify-embed'),
+  spotifyEmbedMeta: document.querySelector('#spotify-embed-meta'),
   spotifySearchForm: document.querySelector('#spotify-search-form'),
   spotifySearchInput: document.querySelector('#spotify-search'),
-  spotifyPrev: document.querySelector('#spotify-prev'),
-  spotifyPlay: document.querySelector('#spotify-play'),
-  spotifyPause: document.querySelector('#spotify-pause'),
-  spotifyNext: document.querySelector('#spotify-next'),
-  spotifyVolume: document.querySelector('#spotify-volume'),
+  spotifyResults: document.querySelector('#spotify-results'),
+  spotifyRecent: document.querySelector('#spotify-recent'),
   footerSpotifyStatus: document.querySelector('#footer-spotify-status'),
   youtubeKeyInput: document.querySelector('#youtube-key'),
   youtubeToggle: document.querySelector('#youtube-key-toggle'),
@@ -50,11 +81,8 @@ const selectors = {
 const state = {
   countdownIntervalId: null,
   spotify: {
-    token: null,
-    profile: null,
-    deviceId: null,
-    lastSearch: null,
     recent: [],
+    activeUrl: null,
   },
   youtube: {
     apiKey: null,
@@ -63,6 +91,7 @@ const state = {
     pendingVideo: null,
   },
   youtubePlayer: null,
+  youtubePlayerReady: false,
 };
 
 init();
@@ -74,7 +103,6 @@ function init() {
   initSpotify();
   initYouTube();
   initFooter();
-  parseSpotifyTokenFromHash();
 }
 
 // -------------------------
@@ -291,73 +319,31 @@ function createParticle(canvas) {
 // -------------------------
 // Spotify integration
 // -------------------------
+const SPOTIFY_HISTORY_KEY = 'spotifyRecentEmbeds';
+
 function initSpotify() {
-  const storedToken = window.localStorage?.getItem('spotifyAccessToken');
-  if (storedToken) {
-    state.spotify.token = storedToken;
-    selectors.spotifyTokenInput.value = storedToken;
-    setSpotifyStatus('connected', 'Token restored from secure local storage.');
-    refreshSpotifyData();
-  } else {
-    setSpotifyStatus('disconnected', 'Paste a valid OAuth token to get started.');
-  }
+  setSpotifyStatus('ready', 'Pick a playlist or paste a link. No login needed.');
+  loadSpotifyHistory();
+  renderSpotifyResults(SPOTIFY_CURATED);
 
-  selectors.spotifyToggle?.addEventListener('click', () => toggleMaskedInput(selectors.spotifyTokenInput, selectors.spotifyToggle));
-
-  selectors.spotifyConnect?.addEventListener('click', () => {
-    const token = selectors.spotifyTokenInput.value.trim();
-    if (!token) {
-      showSpotifyMessage('Please paste a valid OAuth token from Spotify.', 'error');
-      return;
-    }
-    state.spotify.token = token;
-    window.localStorage?.setItem('spotifyAccessToken', token);
-    setSpotifyStatus('connected', 'Spotify linked successfully.');
-    refreshSpotifyData();
+  selectors.spotifyLinkForm?.addEventListener('submit', handleSpotifyLinkSubmit);
+  selectors.spotifySearchForm?.addEventListener('submit', (event) => {
+    event.preventDefault();
+    handleSpotifySearchInput();
   });
-
-  selectors.spotifyStartAuth?.addEventListener('click', handleSpotifyAuthRequest);
-  selectors.spotifyRefresh?.addEventListener('click', refreshSpotifyNowPlaying);
-  selectors.spotifySearchForm?.addEventListener('submit', handleSpotifySearch);
-  selectors.spotifyPrev?.addEventListener('click', () => sendSpotifyCommand('me/player/previous', 'POST'));
-  selectors.spotifyPlay?.addEventListener('click', () => sendSpotifyCommand('me/player/play', 'PUT'));
-  selectors.spotifyPause?.addEventListener('click', () => sendSpotifyCommand('me/player/pause', 'PUT'));
-  selectors.spotifyNext?.addEventListener('click', () => sendSpotifyCommand('me/player/next', 'POST'));
-  selectors.spotifyVolume?.addEventListener('change', (event) => {
-    const value = Number(event.target.value ?? 50);
-    sendSpotifyCommand(`me/player/volume?volume_percent=${value}`, 'PUT');
-  });
-
-  selectors.spotifySearchInput?.addEventListener('input', () => {
-    const hasValue = selectors.spotifySearchInput.value.trim().length > 0;
-    selectors.spotifySearchForm?.classList.toggle('has-query', hasValue);
-  });
-
-  updateConnectButtonState(selectors.spotifyTokenInput, selectors.spotifyConnect);
-  selectors.spotifyTokenInput?.addEventListener('input', () => updateConnectButtonState(selectors.spotifyTokenInput, selectors.spotifyConnect));
-}
-
-function parseSpotifyTokenFromHash() {
-  if (!window.location.hash) return;
-  const hash = window.location.hash.slice(1);
-  const params = new URLSearchParams(hash);
-  const accessToken = params.get('access_token');
-  if (accessToken) {
-    window.location.hash = '';
-    selectors.spotifyTokenInput.value = accessToken;
-    state.spotify.token = accessToken;
-    window.localStorage?.setItem('spotifyAccessToken', accessToken);
-    setSpotifyStatus('connected', 'Spotify token received via redirect.');
-    refreshSpotifyData();
-  }
+  selectors.spotifySearchInput?.addEventListener('input', handleSpotifySearchInput);
 }
 
 function setSpotifyStatus(status, message = '') {
+  if (!selectors.spotifyStatus) return;
   selectors.spotifyStatus.dataset.status = status;
-  selectors.spotifyStatus.textContent = status === 'connected' ? 'Connected' : status === 'error' ? 'Error' : 'Disconnected';
-  selectors.footerSpotifyStatus.textContent = selectors.spotifyStatus.textContent;
+  const text = status === 'success' ? 'Connected' : status === 'error' ? 'Error' : 'Ready';
+  selectors.spotifyStatus.textContent = text;
+  if (selectors.footerSpotifyStatus) {
+    selectors.footerSpotifyStatus.textContent = text;
+  }
   if (message) {
-    const variant = status === 'error' ? 'error' : status === 'connected' ? 'success' : 'info';
+    const variant = status === 'error' ? 'error' : status === 'success' ? 'success' : 'info';
     showSpotifyMessage(message, variant);
   }
 }
@@ -368,13 +354,346 @@ function showSpotifyMessage(text, variant = 'info') {
   selectors.spotifyMessage.dataset.variant = variant;
 }
 
+function handleSpotifyLinkSubmit(event) {
+  event.preventDefault();
+  const raw = selectors.spotifyLinkInput?.value.trim();
+  if (!raw) {
+    showSpotifyMessage('Paste a Spotify link to start playback.', 'error');
+    return;
+  }
+
+  const normalized = normalizeSpotifyUrl(raw);
+  if (!normalized) {
+    showSpotifyMessage('That link is not a format Spotify embeds can load.', 'error');
+    return;
+  }
+
+  selectors.spotifyLinkInput.value = normalized.displayUrl;
+  loadSpotifyEmbed(normalized);
+}
+
+function handleSpotifySearchInput() {
+  const query = selectors.spotifySearchInput?.value.trim().toLowerCase() ?? '';
+  if (selectors.spotifySearchForm) {
+    selectors.spotifySearchForm.classList.toggle('has-query', Boolean(query));
+  }
+  const matches = query
+    ? SPOTIFY_CURATED.filter((item) =>
+        [item.title, item.subtitle].some((field) => field.toLowerCase().includes(query))
+      )
+    : SPOTIFY_CURATED;
+  renderSpotifyResults(matches);
+}
+
+function renderSpotifyResults(items) {
+  const container = selectors.spotifyResults;
+  if (!container) return;
+  container.innerHTML = '';
+
+  if (!items.length) {
+    container.innerHTML = '<p class="panel-card__note">No matches found. Try a different vibe.</p>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  items.forEach((item) => {
+    const normalized = normalizeSpotifyUrl(item.url);
+    if (!normalized) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'spotify-tile';
+    button.dataset.url = normalized.fullUrl;
+    button.dataset.type = normalized.type;
+    button.style.setProperty('--tile-accent', item.accent ?? defaultSpotifyAccent(normalized.type));
+    if (state.spotify.activeUrl === normalized.fullUrl) {
+      button.classList.add('is-active');
+    }
+    button.innerHTML = `
+      <span class="spotify-tile__swatch"></span>
+      <span class="spotify-tile__meta">
+        <span class="spotify-tile__type">${formatSpotifyType(normalized.type)}</span>
+        <span class="spotify-tile__title">${escapeHtml(item.title)}</span>
+        <span class="spotify-tile__subtitle">${escapeHtml(item.subtitle)}</span>
+      </span>
+    `;
+    button.setAttribute('aria-label', `${item.title} — ${formatSpotifyType(normalized.type)}`);
+    button.addEventListener('click', () => {
+      loadSpotifyEmbed(normalized, {
+        title: item.title,
+        subtitle: item.subtitle,
+        accent: item.accent ?? defaultSpotifyAccent(normalized.type),
+      });
+    });
+    fragment.appendChild(button);
+  });
+
+  container.appendChild(fragment);
+  highlightActiveSpotifyTile();
+}
+
+function highlightActiveSpotifyTile() {
+  const tiles = selectors.spotifyResults?.querySelectorAll('.spotify-tile');
+  if (!tiles) return;
+  tiles.forEach((tile) => {
+    const normalized = normalizeSpotifyUrl(tile.dataset.url);
+    const isActive = normalized && normalized.fullUrl === state.spotify.activeUrl;
+    tile.classList.toggle('is-active', Boolean(isActive));
+  });
+}
+
+async function loadSpotifyEmbed(entry, context = {}) {
+  const container = selectors.spotifyEmbed;
+  if (!container) return;
+
+  const accentColor = context.accent ?? defaultSpotifyAccent(entry.type);
+  container.style.setProperty('--tile-accent', accentColor);
+  selectors.spotifyEmbedMeta?.style.setProperty('--tile-accent', accentColor);
+
+  state.spotify.activeUrl = entry.fullUrl;
+  container.innerHTML = `
+    <iframe
+      src="${entry.embedUrl}?utm_source=generator"
+      title="Spotify player"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+      allowfullscreen
+      loading="lazy"
+    ></iframe>
+  `;
+  container.classList.add('is-loaded');
+
+  if (selectors.spotifyEmbedMeta) {
+    selectors.spotifyEmbedMeta.innerHTML = '<div class="skeleton skeleton--line"></div>';
+  }
+
+  highlightActiveSpotifyTile();
+
+  try {
+    const meta = await fetchSpotifyOEmbed(entry.fullUrl);
+    const details = {
+      title: meta?.title ?? context.title ?? 'Spotify',
+      subtitle: meta?.author_name ?? context.subtitle ?? formatSpotifyType(entry.type),
+      thumbnail: meta?.thumbnail_url ?? '',
+      accent: accentColor,
+      type: entry.type,
+      url: entry.fullUrl,
+    };
+    renderSpotifyMeta(details);
+    recordSpotifyRecent(details);
+    setSpotifyStatus('success', 'Spotify embed ready.');
+  } catch (error) {
+    const details = {
+      title: context.title ?? 'Spotify',
+      subtitle: context.subtitle ?? formatSpotifyType(entry.type),
+      thumbnail: '',
+      accent: accentColor,
+      type: entry.type,
+      url: entry.fullUrl,
+    };
+    renderSpotifyMeta(details, true);
+    recordSpotifyRecent(details);
+    showSpotifyMessage('Loaded the Spotify player, but metadata could not be fetched.', 'info');
+    setSpotifyStatus('success');
+  }
+}
+
+async function fetchSpotifyOEmbed(url) {
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(url)}`, {
+      signal: controller.signal,
+    });
+    if (!response.ok) {
+      throw new Error('Unable to fetch Spotify metadata');
+    }
+    return await response.json();
+  } finally {
+    window.clearTimeout(timeout);
+  }
+}
+
+function renderSpotifyMeta(details, isFallback = false) {
+  const container = selectors.spotifyEmbedMeta;
+  if (!container) return;
+  const accent = details.accent ?? defaultSpotifyAccent(details.type);
+  container.style.setProperty('--tile-accent', accent);
+
+  container.innerHTML = `
+    ${
+      details.thumbnail
+        ? `<img src="${details.thumbnail}" alt="${escapeHtml(details.title)} artwork" class="embed-meta__thumb" loading="lazy" />`
+        : '<div class="embed-meta__thumb embed-meta__thumb--placeholder"></div>'
+    }
+    <div class="embed-meta__text">
+      <span class="embed-meta__badge">${formatSpotifyType(details.type)}</span>
+      <p class="embed-meta__title">${escapeHtml(details.title)}</p>
+      <p class="embed-meta__subtitle">${escapeHtml(details.subtitle)}</p>
+    </div>
+  `;
+
+  if (!details.thumbnail) {
+    const placeholder = container.querySelector('.embed-meta__thumb--placeholder');
+    placeholder?.style.setProperty('--tile-accent', accent);
+  }
+}
+
+function recordSpotifyRecent(details) {
+  if (!details?.url) return;
+  const accent = details.accent ?? defaultSpotifyAccent(details.type);
+  const history = state.spotify.recent.filter((entry) => entry.url !== details.url);
+  history.unshift({
+    title: details.title,
+    subtitle: details.subtitle,
+    url: details.url,
+    type: details.type,
+    accent,
+  });
+  state.spotify.recent = history.slice(0, 8);
+  window.localStorage?.setItem(SPOTIFY_HISTORY_KEY, JSON.stringify(state.spotify.recent));
+  renderSpotifyRecent();
+  highlightActiveSpotifyTile();
+}
+
+function renderSpotifyRecent() {
+  const list = selectors.spotifyRecent;
+  if (!list) return;
+  list.innerHTML = '';
+
+  if (!state.spotify.recent.length) {
+    list.innerHTML = '<li class="recent__empty">No listening history yet.</li>';
+    return;
+  }
+
+  const fragment = document.createDocumentFragment();
+  state.spotify.recent.forEach((entry) => {
+    const li = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'recent__item';
+    button.style.setProperty('--tile-accent', entry.accent ?? defaultSpotifyAccent(entry.type));
+    button.classList.toggle('is-active', state.spotify.activeUrl === entry.url);
+    button.innerHTML = `
+      <span class="recent__title">${escapeHtml(entry.title)}</span>
+      <span class="recent__meta">${formatSpotifyType(entry.type)} · ${escapeHtml(entry.subtitle)}</span>
+    `;
+    button.setAttribute('aria-label', `${entry.title} — ${formatSpotifyType(entry.type)}`);
+    button.addEventListener('click', () => {
+      const normalized = normalizeSpotifyUrl(entry.url);
+      if (!normalized) return;
+      loadSpotifyEmbed(normalized, entry);
+    });
+    li.appendChild(button);
+    fragment.appendChild(li);
+  });
+
+  list.appendChild(fragment);
+}
+
+function loadSpotifyHistory() {
+  const stored = window.localStorage?.getItem(SPOTIFY_HISTORY_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        state.spotify.recent = parsed.filter((entry) => entry && entry.url && entry.title);
+      }
+    } catch (error) {
+      state.spotify.recent = [];
+    }
+  }
+  renderSpotifyRecent();
+}
+
+function normalizeSpotifyUrl(raw) {
+  if (!raw) return null;
+  let value = raw.trim();
+  if (value.startsWith('spotify:')) {
+    const parts = value.split(':').filter(Boolean);
+    if (parts.length >= 3) {
+      value = `https://open.spotify.com/${parts[1]}/${parts[2]}`;
+    } else {
+      return null;
+    }
+  }
+  if (!/^https?:/i.test(value)) {
+    value = `https://${value}`;
+  }
+  let url;
+  try {
+    url = new URL(value);
+  } catch (error) {
+    return null;
+  }
+  if (!url.hostname.includes('spotify.com')) return null;
+  const segments = url.pathname.split('/').filter(Boolean);
+  if (segments[0]?.startsWith('intl')) {
+    segments.shift();
+  }
+  if (segments[0] === 'embed' && segments.length >= 3) {
+    segments.shift();
+  }
+  if (segments.length < 2) return null;
+  const type = segments[0];
+  const id = segments[1];
+  const supported = ['track', 'album', 'playlist', 'artist', 'episode', 'show'];
+  if (!supported.includes(type)) return null;
+  const cleanUrl = `https://open.spotify.com/${type}/${id}`;
+  return {
+    type,
+    id,
+    fullUrl: cleanUrl,
+    displayUrl: cleanUrl,
+    embedUrl: `https://open.spotify.com/embed/${type}/${id}`,
+  };
+}
+
+function formatSpotifyType(type) {
+  switch (type) {
+    case 'track':
+      return 'Track';
+    case 'album':
+      return 'Album';
+    case 'playlist':
+      return 'Playlist';
+    case 'artist':
+      return 'Artist';
+    case 'episode':
+      return 'Episode';
+    case 'show':
+      return 'Podcast';
+    default:
+      return 'Spotify';
+  }
+}
+
+function defaultSpotifyAccent(type) {
+  switch (type) {
+    case 'track':
+      return 'rgba(255, 149, 128, 0.55)';
+    case 'album':
+      return 'rgba(96, 165, 250, 0.55)';
+    case 'artist':
+      return 'rgba(161, 102, 255, 0.55)';
+    case 'episode':
+    case 'show':
+      return 'rgba(255, 212, 130, 0.55)';
+    default:
+      return 'rgba(74, 214, 184, 0.55)';
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function updateConnectButtonState(input, button) {
   if (!input || !button) return;
-  if (input.value.trim()) {
-    button.classList.add('is-ready');
-  } else {
-    button.classList.remove('is-ready');
-  }
+  button.classList.toggle('is-ready', Boolean(input.value.trim()));
 }
 
 function toggleMaskedInput(input, toggleButton) {
@@ -382,199 +701,7 @@ function toggleMaskedInput(input, toggleButton) {
   const isPassword = input.type === 'password';
   input.type = isPassword ? 'text' : 'password';
   toggleButton.textContent = isPassword ? 'Hide' : 'Show';
-  toggleButton.setAttribute('aria-label', `${isPassword ? 'Hide' : 'Show'} token`);
-}
-
-async function handleSpotifyAuthRequest() {
-  const redirectUri = window.location.origin.includes('http') ? `${window.location.origin}${window.location.pathname}` : 'https://developer.spotify.com/console/get-currently-playing/';
-  const scope = encodeURIComponent('user-read-playback-state user-modify-playback-state user-read-currently-playing user-read-recently-played');
-  const url = `https://accounts.spotify.com/authorize?client_id=${SPOTIFY_CLIENT_ID}&response_type=token&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&show_dialog=true`;
-  window.open(url, '_blank', 'noopener');
-}
-
-async function refreshSpotifyData() {
-  await Promise.all([refreshSpotifyNowPlaying(), fetchSpotifyRecent()]);
-}
-
-async function refreshSpotifyNowPlaying() {
-  const container = selectors.spotifyNowPlaying;
-  if (!container) return;
-
-  if (!state.spotify.token) {
-    container.innerHTML = '<p class="panel-card__note">Connect to Spotify to see what is playing.</p>';
-    return;
-  }
-
-  try {
-    const data = await spotifyFetch('me/player/currently-playing');
-    if (!data || !data.item) {
-      container.innerHTML = '<p class="panel-card__note">Nothing is playing right now.</p>';
-      return;
-    }
-
-    renderSpotifyNowPlaying(data);
-  } catch (error) {
-    handleSpotifyError(error);
-  }
-}
-
-function renderSpotifyNowPlaying(data) {
-  const container = selectors.spotifyNowPlaying;
-  if (!container) return;
-  const track = data.item;
-  const artists = track.artists?.map((artist) => artist.name).join(', ');
-  const cover = track.album?.images?.[0]?.url ?? '';
-
-  container.innerHTML = `
-    <img src="${cover}" alt="${track.name} artwork" class="now-playing__cover" />
-    <div class="now-playing__meta">
-      <h4 class="now-playing__title">${track.name}</h4>
-      <p class="now-playing__artist">${artists}</p>
-      <p class="panel-card__note">Device: ${data.device?.name ?? 'Unknown'}</p>
-    </div>
-  `;
-}
-
-async function handleSpotifySearch(event) {
-  event.preventDefault();
-  const query = selectors.spotifySearchInput.value.trim();
-  if (!query) return;
-  if (!state.spotify.token) {
-    showSpotifyMessage('Connect to Spotify before searching.', 'error');
-    return;
-  }
-
-  selectors.spotifyResults.innerHTML = '<div class="skeleton skeleton--tile"></div><div class="skeleton skeleton--tile"></div><div class="skeleton skeleton--tile"></div>';
-
-  try {
-    const response = await spotifyFetch(`search?type=track&limit=9&q=${encodeURIComponent(query)}`);
-    const tracks = response?.tracks?.items ?? [];
-    renderSpotifySearchResults(tracks);
-    state.spotify.lastSearch = query;
-  } catch (error) {
-    handleSpotifyError(error);
-  }
-}
-
-function renderSpotifySearchResults(tracks) {
-  const container = selectors.spotifyResults;
-  if (!container) return;
-  if (!tracks.length) {
-    container.innerHTML = '<p class="panel-card__note">No results found. Try another search term.</p>';
-    return;
-  }
-
-  container.innerHTML = tracks
-    .map((track) => {
-      const cover = track.album?.images?.[1]?.url ?? '';
-      const artists = track.artists?.map((artist) => artist.name).join(', ');
-      return `
-        <article class="track-card">
-          <img src="${cover}" alt="${track.name} cover" class="track-card__cover" />
-          <div class="track-card__meta">
-            <h4 class="track-card__title">${track.name}</h4>
-            <p class="track-card__subtitle">${artists}</p>
-          </div>
-        </article>
-      `;
-    })
-    .join('');
-}
-
-async function fetchSpotifyRecent() {
-  if (!state.spotify.token) return;
-  try {
-    const response = await spotifyFetch('me/player/recently-played?limit=6');
-    const items = response?.items ?? [];
-    state.spotify.recent = items;
-    renderSpotifyRecent(items);
-  } catch (error) {
-    handleSpotifyError(error);
-  }
-}
-
-function renderSpotifyRecent(items) {
-  const list = selectors.spotifyRecent;
-  if (!list) return;
-  if (!items.length) {
-    list.innerHTML = '<li>No recent playback yet.</li>';
-    return;
-  }
-  list.innerHTML = items
-    .map((item) => {
-      const track = item.track;
-      const artists = track?.artists?.map((artist) => artist.name).join(', ');
-      const playedAt = new Date(item.played_at).toLocaleString();
-      return `
-        <li>
-          <strong>${track?.name ?? 'Unknown track'}</strong>
-          <span>${artists}</span>
-          <span>Played: ${playedAt}</span>
-        </li>
-      `;
-    })
-    .join('');
-}
-
-async function sendSpotifyCommand(endpoint, method = 'POST') {
-  if (!state.spotify.token) {
-    showSpotifyMessage('Connect to Spotify first.', 'error');
-    return;
-  }
-  try {
-    await spotifyFetch(endpoint, { method });
-    showSpotifyMessage('Command sent to Spotify.', 'success');
-    refreshSpotifyNowPlaying();
-  } catch (error) {
-    handleSpotifyError(error);
-  }
-}
-
-async function spotifyFetch(endpoint, options = {}) {
-  if (!state.spotify.token) throw new Error('Missing token');
-  const controller = new AbortController();
-  const timeout = window.setTimeout(() => controller.abort(), 10000);
-
-  const response = await fetch(`https://api.spotify.com/v1/${endpoint}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${state.spotify.token}`,
-      'Content-Type': 'application/json',
-      ...(options.headers ?? {}),
-    },
-    signal: controller.signal,
-  }).catch((error) => {
-    window.clearTimeout(timeout);
-    throw error;
-  });
-
-  window.clearTimeout(timeout);
-
-  if (response.status === 204) {
-    setSpotifyStatus('connected');
-    return null;
-  }
-  if (response.status === 401) {
-    setSpotifyStatus('error', 'Token expired. Please reconnect.');
-    window.localStorage?.removeItem('spotifyAccessToken');
-    throw new Error('Spotify token expired');
-  }
-
-  if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
-    const message = body?.error?.message ?? 'Spotify request failed';
-    throw new Error(message);
-  }
-
-  const data = await response.json();
-  setSpotifyStatus('connected');
-  return data;
-}
-
-function handleSpotifyError(error) {
-  console.error(error);
-  showSpotifyMessage(error.message ?? 'Something went wrong with Spotify.', 'error');
-  setSpotifyStatus('error');
+  toggleButton.setAttribute('aria-label', `${isPassword ? 'Hide' : 'Show'} key`);
 }
 
 // -------------------------
@@ -774,18 +901,12 @@ function playYoutubeVideo(video) {
   if (!video?.id) return;
   state.youtube.pendingVideo = video;
 
-  if (!state.youtubePlayer) {
-    if (window.YT && typeof window.YT.Player === 'function') {
-      state.youtubePlayer = new window.YT.Player('youtube-player', {
-        videoId: video.id,
-        playerVars: {
-          rel: 0,
-          modestbranding: 1,
-        },
-      });
-    }
-  } else {
+  if (state.youtubePlayer && typeof state.youtubePlayer.loadVideoById === 'function' && state.youtubePlayerReady) {
     state.youtubePlayer.loadVideoById(video.id);
+  } else if (state.youtubePlayer && typeof state.youtubePlayer.cueVideoById === 'function') {
+    state.youtubePlayer.cueVideoById(video.id);
+  } else if (window.YT && typeof window.YT.Player === 'function') {
+    mountYoutubePlayer(video.id);
   }
 
   selectors.youtubePlayerDetails.innerHTML = `
@@ -794,6 +915,30 @@ function playYoutubeVideo(video) {
     <span>Duration: ${video.duration}</span>
     <span>Views: ${Number(video.views ?? 0).toLocaleString()}</span>
   `;
+}
+
+function mountYoutubePlayer(initialVideoId) {
+  if (state.youtubePlayer || !document.getElementById('youtube-player')) return;
+  if (!window.YT || typeof window.YT.Player !== 'function') return;
+
+  state.youtubePlayerReady = false;
+  state.youtubePlayer = new window.YT.Player('youtube-player', {
+    videoId: initialVideoId,
+    playerVars: {
+      rel: 0,
+      modestbranding: 1,
+    },
+    events: {
+      onReady(event) {
+        state.youtubePlayerReady = true;
+        if (state.youtube.pendingVideo) {
+          event.target.loadVideoById(state.youtube.pendingVideo.id);
+        } else if (initialVideoId) {
+          event.target.loadVideoById(initialVideoId);
+        }
+      },
+    },
+  });
 }
 
 function recordYoutubeHistory(query, video) {
@@ -857,15 +1002,7 @@ function initFooter() {
 }
 
 window.onYouTubeIframeAPIReady = function onYouTubeIframeAPIReady() {
-  if (state.youtube.pendingVideo) {
-    playYoutubeVideo(state.youtube.pendingVideo);
-  } else if (!state.youtubePlayer && document.getElementById('youtube-player')) {
-    state.youtubePlayer = new window.YT.Player('youtube-player', {
-      playerVars: {
-        rel: 0,
-        modestbranding: 1,
-      },
-    });
-  }
+  const pendingId = state.youtube.pendingVideo?.id;
+  mountYoutubePlayer(pendingId);
 };
 

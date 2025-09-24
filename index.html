@@ -97,27 +97,24 @@
     <section id="spotify-panel" class="tab-panel" role="tabpanel" aria-labelledby="tab-spotify" hidden>
       <div class="tab-heading">
         <h2>Spotify Player</h2>
-        <div class="status-pill" id="spotify-status" data-status="disconnected">Disconnected</div>
+        <div class="status-pill" id="spotify-status" data-status="ready">Ready</div>
       </div>
-      <p class="tab-description">Connect your Spotify Premium account to control playback directly from this dashboard. Tokens are stored locally in your browser only.</p>
+      <p class="tab-description">Load any Spotify playlist, track, or album instantly. No OAuth flow is required—everything stays securely on this device.</p>
 
       <section class="panel-card">
         <header class="panel-card__header">
-          <h3>Connect to Spotify</h3>
-          <span class="client-id">Client ID: <code>1bc3566e5b8f4ae1bbaafec8950f4c86</code></span>
+          <h3>Load something you love</h3>
         </header>
-        <div class="input-grid">
-          <label for="spotify-token" class="input-group">
-            <span class="input-group__label">Access token</span>
+        <form class="input-grid" id="spotify-link-form">
+          <label for="spotify-link" class="input-group">
+            <span class="input-group__label">Spotify link</span>
             <div class="input-group__field">
-              <input type="password" id="spotify-token" name="spotify-token" autocomplete="off" placeholder="Paste your OAuth token" />
-              <button type="button" class="input-group__toggle" id="spotify-token-toggle" aria-label="Show token">Show</button>
+              <input type="url" id="spotify-link" name="spotify-link" autocomplete="off" placeholder="https://open.spotify.com/..." required />
             </div>
           </label>
-          <button class="btn" id="spotify-connect">Connect</button>
-          <button class="btn btn--ghost" id="spotify-start-auth">Get token</button>
-        </div>
-        <p class="panel-card__note">Use the <strong>Get token</strong> button to launch Spotify's authorization flow in a new tab. Once authorized, paste the token above. We never transmit your credentials anywhere.</p>
+          <button class="btn" type="submit">Play</button>
+        </form>
+        <p class="panel-card__note">Works with tracks, playlists, albums, artists, and podcasts. We embed the official Spotify player, so playback stays in Spotify’s ecosystem.</p>
         <div class="status-message" id="spotify-message" role="status" aria-live="polite"></div>
       </section>
 
@@ -125,54 +122,29 @@
         <section class="panel-card spotify-card">
           <header class="panel-card__header">
             <h3>Currently playing</h3>
-            <button class="btn btn--small" id="spotify-refresh">Refresh</button>
           </header>
-          <div class="now-playing" id="spotify-now-playing">
-            <div class="skeleton skeleton--cover"></div>
-            <div class="now-playing__meta">
-              <div class="skeleton skeleton--line"></div>
-              <div class="skeleton skeleton--line"></div>
+          <div class="spotify-embed" id="spotify-embed">
+            <div class="embed-placeholder">
+              <p>Select a suggestion or paste a Spotify link to start listening.</p>
             </div>
           </div>
+          <div class="embed-meta" id="spotify-embed-meta"></div>
         </section>
 
         <section class="panel-card spotify-card">
           <header class="panel-card__header">
-            <h3>Playback controls</h3>
-          </header>
-          <div class="controls">
-            <div class="control-buttons">
-              <button class="icon-btn" id="spotify-prev" aria-label="Previous track">&#9664;&#9664;</button>
-              <button class="icon-btn" id="spotify-play" aria-label="Play">&#9658;</button>
-              <button class="icon-btn" id="spotify-pause" aria-label="Pause">&#10074;&#10074;</button>
-              <button class="icon-btn" id="spotify-next" aria-label="Next track">&#9654;&#9654;</button>
-            </div>
-            <label for="spotify-volume" class="volume">
-              <span>Volume</span>
-              <input type="range" id="spotify-volume" min="0" max="100" value="50" />
-            </label>
-          </div>
-        </section>
-
-        <section class="panel-card spotify-card">
-          <header class="panel-card__header">
-            <h3>Search Spotify</h3>
+            <h3>Curated picks</h3>
           </header>
           <form class="search" id="spotify-search-form">
-            <label for="spotify-search" class="sr-only">Search tracks or artists</label>
-            <input type="search" id="spotify-search" placeholder="Search by track, artist, or album" autocomplete="off" />
-            <button class="btn btn--small" type="submit">Search</button>
+            <label for="spotify-search" class="sr-only">Search curated picks</label>
+            <input type="search" id="spotify-search" placeholder="Search these vibes" autocomplete="off" />
           </form>
-          <div class="search-results" id="spotify-results" aria-live="polite">
-            <div class="skeleton skeleton--tile"></div>
-            <div class="skeleton skeleton--tile"></div>
-            <div class="skeleton skeleton--tile"></div>
-          </div>
+          <div class="search-results" id="spotify-results" aria-live="polite"></div>
         </section>
 
         <section class="panel-card spotify-card">
           <header class="panel-card__header">
-            <h3>Recent plays</h3>
+            <h3>Recent sessions</h3>
           </header>
           <ul class="recent" id="spotify-recent"></ul>
         </section>
