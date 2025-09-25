@@ -244,6 +244,8 @@
 
       .spotify-track img {
         width: 100%;
+        aspect-ratio: 1 / 1;
+        object-fit: cover;
         border-radius: 14px;
         display: block;
       }
@@ -450,6 +452,7 @@
 
       let spotifyPlayer = null;
       let spotifyDeviceId = null;
+      let playerActivated = false;
 
       function setSpotifyStatus(message, tone = 'info') {
         spotifyStatus.textContent = message;
@@ -481,10 +484,34 @@
         }
         spotifyPlayer = null;
         spotifyDeviceId = null;
+        playerActivated = false;
         playBtn.disabled = true;
         pauseBtn.disabled = true;
         nowPlayingEl.textContent = 'No track playing yet.';
         setSpotifyStatus(message, 'error');
+      }
+
+      async function activateSpotifyPlayer() {
+        if (!spotifyPlayer || playerActivated) return;
+        if (typeof spotifyPlayer.activateElement === 'function') {
+          try {
+            await spotifyPlayer.activateElement();
+            playerActivated = true;
+          } catch (err) {
+            console.warn('Failed to activate Spotify player element', err);
+          }
+        } else {
+          playerActivated = true;
+        }
+      }
+
+      async function resumeSpotifyPlayer() {
+        if (!spotifyPlayer || typeof spotifyPlayer.resume !== 'function') return;
+        try {
+          await spotifyPlayer.resume();
+        } catch (err) {
+          console.warn('Failed to resume Spotify playback', err);
+        }
       }
 
       function formatTrack(state) {
@@ -538,6 +565,7 @@
           const { deviceId, player } = await initPlayer(getToken);
           spotifyPlayer = player;
           spotifyDeviceId = deviceId;
+          playerActivated = false;
           setSpotifyStatus('Spotify device ready.', 'success');
           playBtn.disabled = false;
           pauseBtn.disabled = false;
@@ -564,6 +592,7 @@
               setSpotifyStatus('Spotify device went offline. Reload to reconnect.', 'error');
               playBtn.disabled = true;
               pauseBtn.disabled = true;
+              playerActivated = false;
             }
           });
 
@@ -571,7 +600,9 @@
             playBtn.disabled = true;
             try {
               setSpotifyStatus('Attempting to play the sample track…');
+              await activateSpotifyPlayer();
               await startPlayback(deviceId, { uris: ['spotify:track:3n3Ppam7vgaVa1iaRUc9Lp'] }, getToken);
+              await resumeSpotifyPlayer();
               setSpotifyStatus('Sample track sent to the Spotify player.', 'success');
             } catch (err) {
               console.error(err);
@@ -762,7 +793,9 @@
                 throw new Error('Spotify device is not ready.');
               }
               setSpotifyStatus(`Playing ${track.name}…`);
+              await activateSpotifyPlayer();
               await startPlayback(spotifyDeviceId, { uris: [track.uri] }, getToken);
+              await resumeSpotifyPlayer();
               setSpotifyStatus('Track sent to the Spotify player.', 'success');
             } catch (err) {
               console.error(err);
