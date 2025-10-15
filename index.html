@@ -19,36 +19,9 @@
     <!-- Spotify Web Playback SDK -->
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
 
-    <script type="module">
-      import { ensureAuth, getAccessTokenSync } from './auth.js';
-      import { initPlayer, startPlayback, pause } from './player.js';
-
-      const status = document.getElementById('status');
-      const loginBtn = document.getElementById('login');
-      const playBtn = document.getElementById('play');
-      const pauseBtn = document.getElementById('pause');
-
-      loginBtn.onclick = async () => { await ensureAuth(); };
-
-      window.onSpotifyWebPlaybackSDKReady = async () => {
-        const token = getAccessTokenSync();
-        if (!token) {
-          status.textContent = 'Click “Log in with Spotify” first.';
-          return;
-        }
-        status.textContent = 'Initializing player…';
-
-        const { deviceId, player } = await initPlayer(() => getAccessTokenSync());
-        status.textContent = `Device ready: ${deviceId}`;
-
-        playBtn.disabled = false;
-        pauseBtn.disabled = false;
-
-        // Must be triggered by a user gesture
-        playBtn.onclick = () =>
-          startPlayback(deviceId, { uris: ['spotify:track:3n3Ppam7vgaVa1iaRUc9Lp'] }); // example
-        pauseBtn.onclick = () => pause(player);
-      };
+    <script type="module" src="./main.js" onerror="document.getElementById('status').textContent='The app failed to load. See console for details.'"></script>
+    <script nomodule>
+      document.getElementById('status').textContent = 'This browser does not support the features required for this app. Please update your browser.';
     </script>
   </body>
 </html>

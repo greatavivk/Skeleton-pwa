@@ -17,7 +17,7 @@ export async function initPlayer(getTokenSync) {
 }
 
 export async function startPlayback(deviceId, body) {
-  await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`, {
+  const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(deviceId)}`, {
     method: 'PUT',
     headers: {
       'Authorization': `Bearer ${localStorage.getItem('sp_access')}`,
@@ -25,9 +25,23 @@ export async function startPlayback(deviceId, body) {
     },
     body: JSON.stringify(body)
   });
+
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
+    try {
+      const json = await res.json();
+      message = json.error?.message ? `${message}: ${json.error.message}` : message;
+    } catch {
+      try {
+        const text = await res.text();
+        if (text) message = `${message}: ${text}`;
+      } catch {}
+    }
+    throw new Error(`Spotify playback failed – ${message}`);
+  }
 }
 
-export function pause(player) { player.pause(); }
+export function pause(player) { return player.pause(); }
 
 function waitFor(check, interval = 100) {
   return new Promise(res => {
