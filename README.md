@@ -19,8 +19,8 @@ All files live in the repo root for easy static deploy (e.g., Vercel).
 ## Wire Spotify (user will do this)
 1. Create a Spotify Developer app.
 2. Add **Redirect URI**: your exact Vercel URL with a trailing slash (e.g., `https://<project>.vercel.app/`).
-3. Copy the **Client ID** and paste it into `auth.js` (replace `YOUR_SPOTIFY_CLIENT_ID`).
-4. Redeploy (Vercel auto-deploys on push).
+3. Open your deployed app and use the **Set Client ID** button in the header to paste the value (it is stored locally in your browser and can be changed later).
+4. Redeploy if you changed any source code (Vercel auto-deploys on push).
 5. Open your app → **Log in with Spotify** → **Play sample** (must be a user gesture). Requires Spotify Premium.
 
 ## Notes

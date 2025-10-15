@@ -656,7 +656,8 @@
         </form>
         <div class="auth-controls">
           <button class="btn-ghost" id="status">Preparing player…</button>
-          <button class="btn-primary" id="login">Log in with Spotify</button>
+          <button class="btn-ghost" id="configureClientId">Set Client ID</button>
+          <button class="btn-primary" id="login" disabled>Log in with Spotify</button>
         </div>
       </header>
 
@@ -770,10 +771,11 @@
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
 
     <script type="module">
-      import { ensureAuth, getAccessTokenSync } from './auth.js';
+      import { ensureAuth, getAccessTokenSync, hasClientId, configureClientId, getClientId } from './auth.js';
       import { initPlayer, startPlayback, pause } from './player.js';
 
       const statusBtn = document.getElementById('status');
+      const configureBtn = document.getElementById('configureClientId');
       const loginBtn = document.getElementById('login');
       const playBtn = document.getElementById('play');
       const pauseBtn = document.getElementById('pause');
@@ -813,11 +815,33 @@
 
       const setStatus = text => {
         statusBtn.textContent = text;
-        statusBtn.ariaLabel = text;
+        statusBtn.setAttribute('aria-label', text);
+      };
+
+      const syncClientIdState = () => {
+        const configured = hasClientId();
+        loginBtn.disabled = !configured;
+        loginBtn.textContent = configured ? 'Log in with Spotify' : 'Set Client ID first';
+        configureBtn.textContent = configured ? 'Update Client ID' : 'Set Client ID';
+        configureBtn.setAttribute('aria-label', configured ? 'Update Spotify Client ID' : 'Set Spotify Client ID');
+        configureBtn.dataset.configured = configured ? 'true' : 'false';
+        if (!configured && !getAccessTokenSync()) {
+          setStatus('Add your Spotify Client ID to begin');
+        }
       };
 
       const withToken = async cb => {
-        const token = getAccessTokenSync();
+        let token = getAccessTokenSync();
+        let hasRefresh = false;
+        try {
+          hasRefresh = !!localStorage.getItem('sp_refresh');
+        } catch (err) {
+          console.warn('Local storage unavailable', err);
+        }
+        if (!token && hasRefresh) {
+          await ensureAuth();
+          token = getAccessTokenSync();
+        }
         if (!token) {
           setStatus('Please log in first');
           return null;
@@ -1192,10 +1216,29 @@
 
       hideSearchResults();
 
+      syncClientIdState();
+
+      configureBtn.addEventListener('click', () => {
+        const existing = hasClientId() ? getClientId() : '';
+        const entered = prompt('Enter your Spotify Client ID', existing);
+        if (entered === null) return;
+        const saved = configureClientId(entered);
+        if (!saved) {
+          setStatus('Client ID cleared. Enter it to continue.');
+        } else {
+          setStatus('Client ID saved locally. Ready to log in.');
+        }
+        syncClientIdState();
+      });
+
       playlistToggle.addEventListener('click', () => toggleDrawer(playlistDrawer.hasAttribute('hidden')));
       closeDrawer.addEventListener('click', () => toggleDrawer(false));
 
       loginBtn.onclick = async () => {
+        if (!hasClientId()) {
+          configureBtn.click();
+          return;
+        }
         await ensureAuth();
         setStatus('Authenticated. Initializing…');
       };

@@ -6,14 +6,67 @@ const SCOPES = [
   'user-read-currently-playing'
 ].join(' ');
 
-// 👉 USER ACTION LATER: replace with the real Spotify Client ID after creating the Spotify app
-const CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID';
+const STORAGE_KEY = 'sp_client_id';
+const DEFAULT_CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID';
+
+const storage = typeof localStorage !== 'undefined' ? localStorage : null;
+const K = { access:'sp_access', exp:'sp_exp', refresh:'sp_refresh', verifier:'sp_verifier' };
+let clientId = DEFAULT_CLIENT_ID;
+
+const isPlaceholder = value => !value || value.toUpperCase().includes('YOUR_SPOTIFY_CLIENT_ID');
+
+if (storage) {
+  const stored = storage.getItem(STORAGE_KEY);
+  if (stored && stored.trim() && !isPlaceholder(stored.trim())) {
+    clientId = stored.trim();
+  }
+}
+
+const clearStoredTokens = () => {
+  storage?.removeItem(K.access);
+  storage?.removeItem(K.exp);
+  storage?.removeItem(K.refresh);
+};
+
+export function getClientId() {
+  return clientId;
+}
+
+export function hasClientId() {
+  return !isPlaceholder(clientId);
+}
+
+export function configureClientId(nextClientId) {
+  const trimmed = (nextClientId || '').trim();
+  if (!trimmed) {
+    clientId = DEFAULT_CLIENT_ID;
+    storage?.removeItem(STORAGE_KEY);
+    clearStoredTokens();
+    return false;
+  }
+  if (isPlaceholder(trimmed)) {
+    clientId = DEFAULT_CLIENT_ID;
+    storage?.removeItem(STORAGE_KEY);
+    clearStoredTokens();
+    return false;
+  }
+  const changed = clientId !== trimmed;
+  clientId = trimmed;
+  storage?.setItem(STORAGE_KEY, clientId);
+  if (changed) {
+    clearStoredTokens();
+  }
+  return true;
+}
+
+export function clearClientId() {
+  configureClientId('');
+}
 
 // Redirect URI automatically matches the deployed origin, e.g. https://<project>.vercel.app/
 const REDIRECT_URI = `${location.origin}/`;
 
 // Storage keys
-const K = { access:'sp_access', exp:'sp_exp', refresh:'sp_refresh', verifier:'sp_verifier' };
 const now = () => Math.floor(Date.now() / 1000);
 
 // Helpers
@@ -29,10 +82,12 @@ export function getAccessTokenSync() {
 }
 
 export async function ensureAuth() {
-  if (!CLIENT_ID || CLIENT_ID.includes('YOUR_SPOTIFY_CLIENT_ID')) {
-    alert('Add your Spotify Client ID in auth.js first.');
+  if (!hasClientId()) {
+    alert('Set your Spotify Client ID first.');
     return;
   }
+
+  const clientId = getClientId();
 
   // Handle OAuth redirect
   const params = new URLSearchParams(location.search);
@@ -56,7 +111,7 @@ export async function ensureAuth() {
 
   const auth = new URL('https://accounts.spotify.com/authorize');
   auth.search = new URLSearchParams({
-    client_id: CLIENT_ID,
+    client_id: clientId,
     response_type: 'code',
     redirect_uri: REDIRECT_URI,
     scope: SCOPES,
@@ -75,7 +130,7 @@ async function handleRedirect(code) {
     grant_type: 'authorization_code',
     code,
     redirect_uri: REDIRECT_URI,
-    client_id: CLIENT_ID,
+    client_id: clientId,
     code_verifier: verifier
   });
 
@@ -93,7 +148,7 @@ async function refreshToken(refresh) {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
     refresh_token: refresh,
-    client_id: CLIENT_ID
+    client_id: clientId
   });
   const res = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
