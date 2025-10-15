@@ -70,6 +70,7 @@
         justify-content: space-between;
         align-items: center;
         gap: 1rem;
+        flex-wrap: wrap;
       }
 
       .brand {
@@ -82,6 +83,49 @@
       .auth-controls {
         display: flex;
         gap: 0.75rem;
+      }
+
+      .search {
+        flex: 1 1 320px;
+        max-width: 520px;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 999px;
+        padding: 0.4rem 0.6rem 0.4rem 0.9rem;
+        box-shadow: 0 12px 34px rgba(0, 0, 0, 0.28);
+        backdrop-filter: blur(14px);
+      }
+
+      .search svg {
+        width: 1.1rem;
+        height: 1.1rem;
+        opacity: 0.7;
+      }
+
+      .search input {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: inherit;
+        font-size: 0.95rem;
+        font-family: inherit;
+        outline: none;
+      }
+
+      .search input::placeholder {
+        color: rgba(247, 247, 247, 0.55);
+      }
+
+      .search:focus-within {
+        background: rgba(255, 255, 255, 0.1);
+        box-shadow: 0 12px 34px rgba(30, 215, 96, 0.22);
+      }
+
+      .search__submit {
+        padding-inline: 1rem;
+        white-space: nowrap;
       }
 
       button {
@@ -327,6 +371,76 @@
         font-size: 1.05rem;
       }
 
+      .search-results {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        background: rgba(0, 0, 0, 0.22);
+        border-radius: 1.25rem;
+        padding: 1rem 1.2rem;
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+      }
+
+      .search-results__status {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .search-results__list {
+        display: grid;
+        gap: 0.75rem;
+      }
+
+      .search-result {
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 1rem;
+        padding: 0.75rem 1rem;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 0.9rem;
+        text-align: left;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        transition: transform 160ms ease, background 160ms ease;
+      }
+
+      .search-result:hover {
+        transform: translateY(-1px);
+        background: rgba(30, 215, 96, 0.18);
+      }
+
+      .search-result__thumb {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: block;
+        object-fit: cover;
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.35);
+      }
+
+      .search-result__meta {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+      }
+
+      .search-result__meta strong {
+        font-size: 0.95rem;
+      }
+
+      .search-result__meta span {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+
+      .search-result__duration {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+
       .volume-control {
         display: flex;
         align-items: center;
@@ -499,6 +613,25 @@
           padding: 1.5rem;
         }
 
+        header {
+          justify-content: center;
+          gap: 1.25rem;
+        }
+
+        .auth-controls {
+          width: 100%;
+          justify-content: flex-end;
+        }
+
+        .search {
+          flex-basis: 100%;
+          max-width: none;
+        }
+
+        .search__submit {
+          padding-inline: 0.9rem;
+        }
+
         .controls {
           grid-template-columns: repeat(3, minmax(0, 1fr));
         }
@@ -513,6 +646,14 @@
     <main>
       <header>
         <div class="brand">Midnight Vinyl Remote</div>
+        <form class="search" id="searchForm" role="search" aria-label="Search Spotify tracks">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <line x1="20" y1="20" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input id="searchInput" type="search" placeholder="Search tracks or artists" aria-label="Search tracks or artists" />
+          <button class="btn-primary search__submit" type="submit">Search</button>
+        </form>
         <div class="auth-controls">
           <button class="btn-ghost" id="status">Preparing player…</button>
           <button class="btn-primary" id="login">Log in with Spotify</button>
@@ -543,6 +684,11 @@
             <span id="elapsed">0:00</span>
             <span id="remaining">0:00</span>
           </div>
+
+          <section class="search-results" id="searchResults" hidden>
+            <p class="search-results__status" id="searchStatus" aria-live="polite">Search for tracks to jump right in.</p>
+            <div class="search-results__list" id="searchItems"></div>
+          </section>
 
           <div class="controls" role="group" aria-label="Playback controls">
             <button class="btn-ghost" id="shuffle" aria-pressed="false" title="Toggle shuffle">
@@ -651,6 +797,11 @@
       const trackList = document.getElementById('trackList');
       const trackItems = document.getElementById('trackItems');
       const trackListTitle = document.getElementById('trackListTitle');
+      const searchForm = document.getElementById('searchForm');
+      const searchInput = document.getElementById('searchInput');
+      const searchResults = document.getElementById('searchResults');
+      const searchStatus = document.getElementById('searchStatus');
+      const searchItems = document.getElementById('searchItems');
 
       let deviceId = null;
       let playerInstance = null;
@@ -658,6 +809,7 @@
       let progressMs = 0;
       let durationMs = 0;
       let isPlaying = false;
+      let searchRequestId = 0;
 
       const setStatus = text => {
         statusBtn.textContent = text;
@@ -879,23 +1031,41 @@
         }
       };
 
-      const playSelectedTrack = async (track, playlist) => {
+      const triggerPlayback = async (body, trackName) => {
         if (!deviceId) {
           setStatus('Player not ready yet');
-          return;
+          return false;
         }
         try {
-          await startPlayback(deviceId, {
-            context_uri: playlist.uri,
-            offset: { uri: track.uri }
-          });
-          setStatus(`Playing ${track.name}`);
+          await startPlayback(deviceId, body);
+          if (trackName) {
+            setStatus(`Playing ${trackName}`);
+          }
           await refreshNowPlaying();
+          return true;
         } catch (err) {
           console.error(err);
           setStatus('Unable to start track');
+          return false;
         }
       };
+
+      const playSelectedTrack = async (track, playlist) =>
+        triggerPlayback(
+          {
+            context_uri: playlist.uri,
+            offset: { uri: track.uri }
+          },
+          track.name
+        );
+
+      const playSearchResult = track =>
+        triggerPlayback(
+          {
+            uris: [track.uri]
+          },
+          track.name
+        );
 
       const toggleDrawer = show => {
         if (show) {
@@ -905,6 +1075,122 @@
         }
         playlistToggle.setAttribute('aria-expanded', show.toString());
       };
+
+      const ensureSearchVisible = () => {
+        if (searchResults) {
+          searchResults.hidden = false;
+        }
+      };
+
+      const hideSearchResults = () => {
+        if (searchResults) {
+          searchResults.hidden = true;
+        }
+        if (searchStatus) {
+          searchStatus.textContent = 'Search for tracks to jump right in.';
+        }
+        if (searchItems) {
+          searchItems.innerHTML = '';
+        }
+      };
+
+      const updateSearchStatus = message => {
+        ensureSearchVisible();
+        if (searchStatus) {
+          searchStatus.textContent = message;
+        }
+      };
+
+      const renderSearchTracks = tracks => {
+        if (!searchItems) return;
+        searchItems.innerHTML = '';
+        tracks.forEach(track => {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'search-result';
+
+          const imageUrl = track.album?.images?.[2]?.url || track.album?.images?.[1]?.url || track.album?.images?.[0]?.url;
+          if (imageUrl) {
+            const img = document.createElement('img');
+            img.className = 'search-result__thumb';
+            img.src = imageUrl;
+            img.alt = track.album?.name ? `${track.album.name} cover` : 'Album artwork';
+            button.appendChild(img);
+          } else {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'search-result__thumb';
+            placeholder.setAttribute('aria-hidden', 'true');
+            placeholder.style.background = 'rgba(255, 255, 255, 0.08)';
+            button.appendChild(placeholder);
+          }
+
+          const meta = document.createElement('div');
+          meta.className = 'search-result__meta';
+
+          const nameEl = document.createElement('strong');
+          nameEl.textContent = track.name;
+          meta.appendChild(nameEl);
+
+          const artistsEl = document.createElement('span');
+          artistsEl.textContent = track.artists?.map(a => a.name).join(', ') || 'Unknown artist';
+          meta.appendChild(artistsEl);
+          button.appendChild(meta);
+
+          const durationEl = document.createElement('span');
+          durationEl.className = 'search-result__duration';
+          durationEl.textContent = track.duration_ms ? msToTime(track.duration_ms) : '';
+          button.appendChild(durationEl);
+
+          button.addEventListener('click', () => playSearchResult(track));
+          searchItems.appendChild(button);
+        });
+      };
+
+      if (searchInput) {
+        searchInput.addEventListener('input', () => {
+          if (!searchInput.value.trim()) {
+            hideSearchResults();
+          }
+        });
+      }
+
+      if (searchForm) {
+        searchForm.addEventListener('submit', async event => {
+          event.preventDefault();
+          if (!searchInput) return;
+          const query = searchInput.value.trim();
+          if (!query) {
+            hideSearchResults();
+            return;
+          }
+          const requestId = ++searchRequestId;
+          updateSearchStatus('Searching…');
+          if (searchItems) {
+            searchItems.innerHTML = '';
+          }
+          try {
+            const data = await apiRequest(`search?type=track&limit=6&q=${encodeURIComponent(query)}`);
+            if (requestId !== searchRequestId) return;
+            if (!data) {
+              updateSearchStatus('Log in to search Spotify.');
+              return;
+            }
+            const tracks = data.tracks?.items || [];
+            if (!tracks.length) {
+              updateSearchStatus(`No tracks found for "${query}".`);
+              return;
+            }
+            updateSearchStatus(`Results for "${query}"`);
+            renderSearchTracks(tracks);
+          } catch (err) {
+            console.error(err);
+            if (requestId !== searchRequestId) return;
+            updateSearchStatus('Unable to search right now.');
+          }
+        });
+      }
+
+      hideSearchResults();
 
       playlistToggle.addEventListener('click', () => toggleDrawer(playlistDrawer.hasAttribute('hidden')));
       closeDrawer.addEventListener('click', () => toggleDrawer(false));
