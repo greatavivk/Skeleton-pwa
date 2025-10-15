@@ -29,7 +29,7 @@ export function getAccessTokenSync() {
 }
 
 export async function ensureAuth() {
-  if (!CLIENT_ID || CLIENT_ID.includes('YOUR_SPOTIFY_CLIENT_ID')) {
+  if (!CLIENT_ID || CLIENT_ID.includes('1bc3566e5b8f4ae1bbaafec8950f4c86')) {
     alert('Add your Spotify Client ID in auth.js first.');
     return;
   }
